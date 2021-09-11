@@ -33,18 +33,18 @@
      </rect>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>110</y>
+      <y>160</y>
       <width>121</width>
       <height>101</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout_2">
+    <layout class="QVBoxLayout" name="btnVLayout">
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="exitBtn">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -57,7 +57,17 @@
       </widget>
      </item>
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout"/>
+      <widget class="QPushButton" name="fileSelectBtn">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Read .off</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </widget>
@@ -83,7 +93,7 @@
  <resources/>
  <connections>
   <connection>
-   <sender>pushButton</sender>
+   <sender>exitBtn</sender>
    <signal>released()</signal>
    <receiver>MainWindow</receiver>
    <slot>close()</slot>
@@ -99,4 +109,7 @@
    </hints>
   </connection>
  </connections>
+ <slots>
+  <slot>on_fileSelectBtn_released()</slot>
+ </slots>
 </ui>

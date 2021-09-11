@@ -12,3 +12,9 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+void MainWindow::on_fileSelectBtn_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Open .off"), QDir::homePath() + "/Downloads/", tr(".off Files (*.off)"), nullptr, QFileDialog::DontUseNativeDialog);
+}
