@@ -15,6 +15,12 @@ Triangle::Triangle() {}
 
 Mesh::Mesh() {
     loadOFF("/home/mikail/Downloads/queen.off");
+
+    int i = 0;
+    for (auto it = vertices_begin(); it != vertices_past_the_end(); ++it) {
+        std::cout << i << std::endl;
+        ++i;
+    }
 //    loadOFF("/home/mikail/Downloads/cube.off");
 //    loadOFF("/home/mikail/Downloads/sphere.off");
 }
@@ -74,8 +80,8 @@ void Mesh::loadOFF(std::string path)
                 triangles.push_back(t);
             }
         }
-
         off.close();
+
         findTopology();
     } else std::cout << "Ouverture du fichier impossible." << std::endl;
 }
@@ -83,7 +89,7 @@ void Mesh::loadOFF(std::string path)
 void Mesh::findTopology() {
     std::map<std::pair<int,int>, std::pair<int,int>> topo; // EDGE -> FACE
 
-    for (int i = 0 ; i < triangles.size() ; ++i) {
+    for (std::size_t i = 0 ; i < triangles.size() ; ++i) {
         for (int j = 0 ; j < 3 ; ++j) {
             uint vertexIdx = triangles[i].vertices[j];
             if (vertices[vertexIdx].triangleIdx == -1)
@@ -113,7 +119,7 @@ void Mesh::findTopology(const std::vector<Point> &points, const std::vector<std:
     }
 
     // Parcours de chaque triangle
-    for (int i = 0 ; i < faces.size(); ++i) {
+    for (std::size_t i = 0 ; i < faces.size(); ++i) {
         Triangle t;
         for (int j = 0 ; j < 3 ; ++j) {
             uint vertexIdx = faces[i][j];
