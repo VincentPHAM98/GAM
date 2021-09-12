@@ -43,7 +43,8 @@ class Mesh
 public:
     Mesh();
     //~Mesh();
-    void readOffFile (std::string path);
+    void loadOFF (std::string path);
+    void findTopology();
     void findTopology(const std::vector<Point> &points, const std::vector<std::array<uint, 3> > &faces);
     void drawMesh(bool wireframe = false);
     void drawMeshWireFrame();

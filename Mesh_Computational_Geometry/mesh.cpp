@@ -14,25 +14,9 @@ void glPointDraw(const Point & p) {
 Triangle::Triangle() {}
 
 Mesh::Mesh() {
-//    std::vector<Point> readVertices;
-//    std::vector<std::array<uint,3>> readFaces;
-//    // Tetrahèdre
-//    // 	Vertices
-//    //		Base
-//    readVertices.push_back(Point(0.,0.,0.));
-//    readVertices.push_back(Point(0.,1.,0.));
-//    readVertices.push_back(Point(1.,1.,0.));
-//    //		Sommet
-//    readVertices.push_back(Point(0.,0.,1.));
-//    // 	Faces
-//    readFaces.push_back({0,2,1}); // Base
-//    readFaces.push_back({0,1,3});
-//    readFaces.push_back({1,2,3});
-//    readFaces.push_back({2,0,3});
-
-//    findTopology(readVertices, readFaces);
-
-    readOffFile("/home/mikail/Downloads/queen.off");
+    loadOFF("/home/mikail/Downloads/queen.off");
+//    loadOFF("/home/mikail/Downloads/cube.off");
+//    loadOFF("/home/mikail/Downloads/sphere.off");
 }
 
 
@@ -47,14 +31,14 @@ int findOppositeIdx(int a, int b) {
     return *s.begin();
 }
 
-void Mesh::readOffFile(std::string path)
+void Mesh::loadOFF(std::string path)
 {
     vertices.clear();
     triangles.clear();
     std::ifstream off(path);
-    std::string line;
-    uint nbVertices, nbFaces;
     if (off.is_open()) {
+        std::string line;
+        uint nbVertices, nbFaces;
         std::getline(off,line);
         // Getting vertex and face info from file
         std::istringstream ss(line);
@@ -63,6 +47,7 @@ void Mesh::readOffFile(std::string path)
 
         std::vector<std::string> strArr(5);
 
+        // Iterating on each line of the file
         while (std::getline(off,line)) {
             strArr.clear();
             ss.clear();
@@ -71,16 +56,17 @@ void Mesh::readOffFile(std::string path)
             // populate array of strings
             while (ss >> value) {
                 strArr.push_back(value);
-//                std::cout << value << std::endl;
             }
-            if (strArr.size() == 3) { // vertex description line
+
+            if (strArr.size() == 3) { // it's a vertex description line
                 Vertex v;
                 v.p._x = std::stof(strArr[0]);
                 v.p._y = std::stof(strArr[1]);
                 v.p._z = std::stof(strArr[2]);
+                v.triangleIdx = -1;
                 vertices.push_back(v);
             }
-            else if (strArr.size() == 4) { // face index line
+            else if (strArr.size() == 4) { // it's a face index line
                 Triangle t;
                 t.vertices[0] = std::stoi(strArr[1]);
                 t.vertices[1] = std::stoi(strArr[2]);
@@ -90,7 +76,31 @@ void Mesh::readOffFile(std::string path)
         }
 
         off.close();
+        findTopology();
     } else std::cout << "Ouverture du fichier impossible." << std::endl;
+}
+
+void Mesh::findTopology() {
+    std::map<std::pair<int,int>, std::pair<int,int>> topo; // EDGE -> FACE
+
+    for (int i = 0 ; i < triangles.size() ; ++i) {
+        for (int j = 0 ; j < 3 ; ++j) {
+            uint vertexIdx = triangles[i].vertices[j];
+            if (vertices[vertexIdx].triangleIdx == -1)
+                vertices[vertexIdx].triangleIdx = i;	// Affectation de l'id du triangle courant aux sommets n'étant pas attachés à un triangle
+            // Créer une paire de sommets avec les id dans l'ordre croissant
+            int next = j < 2 ? j+1 : 0;
+            uint nextVertexIdx = triangles[i].vertices[next];
+            int oppositeIdx = findOppositeIdx(j,next);
+            const auto pair = topo.insert({make_ordered_pair(vertexIdx, nextVertexIdx),
+                                         std::make_pair(i, oppositeIdx)});
+            if (pair.second == false) { // Si l'insertion n'a pas pu être faite dans la map
+                int otherFaceIdx = pair.first->second.first;
+                triangles[i].adjacent[oppositeIdx] = otherFaceIdx;
+                triangles[otherFaceIdx].adjacent[pair.first->second.second] = i;
+            }
+        }
+    }
 }
 
 void Mesh::findTopology(const std::vector<Point> &points, const std::vector<std::array<uint,3>> &faces) {
