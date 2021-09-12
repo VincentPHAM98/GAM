@@ -15,13 +15,18 @@ Triangle::Triangle() {}
 
 Mesh::Mesh() {
     loadOFF("/home/mikail/Downloads/queen.off");
-
-    int i = 0;
-    for (auto it = vertices_begin(); it != vertices_past_the_end(); ++it) {
-        std::cout << i << std::endl;
-        ++i;
-    }
 //    loadOFF("/home/mikail/Downloads/cube.off");
+    Iterator_on_vertices its = vertices_begin();
+    for (; its != vertices_past_the_end(); ++its) {
+        int cmpt=0;
+        auto cf=incident_faces(its.getIdx());
+        ++cf;
+        auto end = incident_faces(its.getIdx());
+        for (; cf!=end; ++cf)
+            cmpt++;
+        std::cout<< "valence of the vertex : " << cmpt << std::endl;
+    }
+
 //    loadOFF("/home/mikail/Downloads/sphere.off");
 }
 
