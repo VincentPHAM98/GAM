@@ -52,7 +52,7 @@ public:
         using value_type        = Vertex;
         using pointer           = Vertex*;
         using reference         = Vertex&;
-        Iterator_on_vertices() = delete;
+        Iterator_on_vertices() : m_ptr(nullptr), currentIdx(-1) {}
         Iterator_on_vertices(const Iterator_on_vertices &copy): m_ptr(copy.m_ptr), currentIdx(copy.currentIdx) {}
         Iterator_on_vertices(pointer ptr): m_ptr(ptr) {}
 
@@ -82,7 +82,7 @@ public:
         using value_type        = Triangle;
         using pointer           = Triangle*;
         using reference         = Triangle&;
-        Iterator_on_faces() = delete;
+        Iterator_on_faces(): m_ptr(nullptr), currentIdx(-1) {}
         Iterator_on_faces(const Iterator_on_faces &copy): m_ptr(copy.m_ptr), currentIdx(copy.currentIdx) {}
         Iterator_on_faces(pointer ptr): m_ptr(ptr) {}
 
