@@ -2,6 +2,8 @@
 #include <iostream>
 #include <set>
 #include <QFileDialog>
+#include <QDebug>
+#include <QDir>
 #include <sstream>
 
 // The following functions could be displaced into a module OpenGLDisplayGeometricWorld that would include mesh.h
@@ -14,7 +16,7 @@ void glPointDraw(const Point & p) {
 Triangle::Triangle() {}
 
 Mesh::Mesh() {
-    loadOFF("/home/mikail/Downloads/queen.off");
+    loadOFF("../data/queen.off");
 //    loadOFF("/home/mikail/Downloads/cube.off");
     Iterator_on_vertices its = vertices_begin();
     for (; its != vertices_past_the_end(); ++its) {
