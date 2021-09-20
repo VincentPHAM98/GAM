@@ -3,6 +3,7 @@
 
 #include <QGLWidget>
 #include <fstream>
+#include <QDebug>
 #include <iterator>
 
 // TO MODIFY
@@ -36,6 +37,8 @@ public:
     // Constraint: vertex i facing adjacent triangle i
     Triangle();
 //    ~Triangle();
+    // Gives internal index of given vertex index
+    size_t getInternalIdx(size_t vertexIdx, int shift) const;
 };
 
 class Mesh
@@ -43,6 +46,7 @@ class Mesh
     std::vector<Vertex> vertices;
     std::vector<Triangle> triangles;
     std::vector<QVector3D> laplacians;
+    std::vector<double> curvature;
 public:
     Mesh();
     //~Mesh();
@@ -130,13 +134,9 @@ public:
             // In the vertex array of the triangle, find the index corresponding to the
             // index of the center vertex of the circulator. The index after this one will
             // be the vertex opposite to the next triangle in counter-clockwise order.
-            int idx;
-            for (idx = 0 ; idx < 3 ; ++idx)
-                if (m_ptr->vertices[idx] == m_center_idx) break;
-            int next = idx < 2 ? idx+1 : 0;
+            int next = m_ptr->getInternalIdx(m_center_idx, 1);
             m_ptr = &(m_mesh.triangles[m_ptr->adjacent[next]]);
             return *this;
-
         }
         friend bool operator== (const Circulator_on_faces& a, const Circulator_on_faces& b) { return a.m_ptr == b.m_ptr; }
         friend bool operator!= (const Circulator_on_faces& a, const Circulator_on_faces& b) { return a.m_ptr != b.m_ptr; }
@@ -170,16 +170,13 @@ public:
         Circulator_on_vertices& operator++() {
             ++m_cofCurrent;
             ++m_cofNext;
-            int idx;
-            for (idx = 0 ; idx < 3 ; ++idx)
-                if (m_cofCurrent->vertices[idx] == m_center_idx) break;
-            int next = idx < 2 ? idx+1 : 0;
+            int next = m_cofCurrent->getInternalIdx(m_center_idx, 2);
             m_ptr = &(m_mesh.vertices[m_cofCurrent->vertices[next]]);
             return *this;
         }
 
-        friend bool operator== (const Circulator_on_vertices& a, const Circulator_on_vertices& b) { return a.m_ptr == b.m_ptr; }
-        friend bool operator!= (const Circulator_on_vertices& a, const Circulator_on_vertices& b) { return a.m_ptr != b.m_ptr; }
+        friend bool operator== (const Circulator_on_vertices& a, const Circulator_on_vertices& b) {return a.m_ptr == b.m_ptr; }
+        friend bool operator!= (const Circulator_on_vertices& a, const Circulator_on_vertices& b) {return a.m_ptr != b.m_ptr; }
 
         const Triangle &getCurrentFace() const { return *m_cofCurrent; }
         const Triangle &getNextFace() const { return *m_cofNext; }
@@ -203,9 +200,6 @@ public:
     Iterator_on_faces faces_past_the_end() {
         return Iterator_on_faces(&(*triangles.end()));
     }
-//    Circulator_on_faces incident_faces(const Vertex &v) {
-//        return Circulator_on_faces(*this, &(triangles[v.triangleIdx]), &v);
-//    }
 
     Circulator_on_faces incident_faces(std::size_t vIdx) {
         return Circulator_on_faces(*this, &(triangles[vertices[vIdx].triangleIdx]), vIdx);
@@ -213,12 +207,8 @@ public:
 
     Circulator_on_vertices adjacent_vertices(std::size_t vIdx) {
         auto cof = incident_faces(vIdx);
-        int idx;
-        for (idx = 0 ; idx < 3 ; ++idx)
-            if (cof->vertices[idx] == vIdx) break;
-//        int next = idx < 2 ? idx+1 : 0;
-        int next = (idx + 2) % 3;
-        Vertex *adjVert = &vertices[cof->vertices[next]];
+        int next2 = cof->getInternalIdx(vIdx, 2);
+        Vertex *adjVert = &vertices[cof->vertices[next2]];
         return Circulator_on_vertices(*this, adjVert, vIdx, cof);
     }
 

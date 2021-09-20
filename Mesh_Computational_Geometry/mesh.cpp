@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QVector3D>
+#include <QtMath>
 #include <sstream>
 
 // The following functions could be displaced into a module OpenGLDisplayGeometricWorld that would include mesh.h
@@ -16,12 +17,12 @@ void glPointDraw(const Point & p) {
 
 Triangle::Triangle() {}
 
-size_t Triangle::centerIdx(size_t center)
+size_t Triangle::getInternalIdx(size_t vertexIdx, int shift = 0) const
 {
     size_t i;
     for (i = 0; i < 3; ++i)
-        if (vertices[i] == center) break;
-    return i;
+        if (vertices[i] == vertexIdx) break;
+    return (i + shift) % 3;
 }
 
 float Mesh::area(const Triangle &t) {
@@ -32,12 +33,10 @@ float Mesh::area(const Triangle &t) {
 }
 
 Mesh::Mesh() {
-//    loadOFF("../data/queen.off");
-    loadOFF("../data/sphere.off");
+    loadOFF("../data/queen.off");
+//    loadOFF("../data/sphere.off");
 //    loadOFF("../data/cube.off");
 
-    for (auto it = faces_begin(); it != faces_past_the_end(); ++it)
-        std::cout << area(*it) << std::endl;
     calculateLaplacian();
     // Circulator on vertex test
 //    Circulator_on_vertices cov = adjacent_vertices(0);
@@ -185,36 +184,77 @@ void Mesh::findTopology(const std::vector<Point> &points, const std::vector<std:
 void Mesh::calculateLaplacian()
 {
     for (auto vIt = vertices_begin(); vIt != vertices_past_the_end(); ++vIt) {
-        float areas = 0.;
+        const Point &ui = vIt->p;
+        double areas = 0.;
         // Calculating area
         for (auto tCir = ++incident_faces(vIt.getIdx()); tCir != incident_faces(vIt.getIdx()); ++tCir ) {
             areas += area(*tCir);
         }
         areas /= 3;
 
-        float laplacian = 0.;
+        double laplacianX = 0., laplacianY = 0., laplacianZ = 0.;
         for (auto vCir = ++adjacent_vertices(vIt.getIdx()); vCir != adjacent_vertices(vIt.getIdx()); ++vCir) {
+            double cotAij, cotBij;
+            const Triangle &cF = vCir.getCurrentFace();
+            int u0 = cF.getInternalIdx(vIt.getIdx(),1);
+            int u1 = (u0 + 1) % 3;
+            int v0 = u0;
+            int v1 = (v0 + 2) % 3;
+            QVector3D u = vertices[cF.vertices[u1]].p - vertices[cF.vertices[u0]].p;
+            QVector3D v = vertices[cF.vertices[v1]].p - vertices[cF.vertices[v0]].p;
+            cotAij = QVector3D::dotProduct(u,v) / QVector3D::crossProduct(u,v).length();
 
+            const Triangle &nF = vCir.getNextFace();
+            u0 = nF.getInternalIdx(vIt.getIdx(),2);
+            u1 = (u0 + 2) % 3;
+            v0 = u0;
+            v1 = (v0 + 1) % 3;
+            u = vertices[nF.vertices[u1]].p - vertices[nF.vertices[u0]].p;
+            v = vertices[nF.vertices[v1]].p - vertices[nF.vertices[v0]].p;
+            cotBij = QVector3D::dotProduct(u,v) / QVector3D::crossProduct(u,v).length();
+
+            laplacianX += (cotAij + cotBij)*(vCir->p._x - ui._x);
+            laplacianY += (cotAij + cotBij)*(vCir->p._y - ui._y);
+            laplacianZ += (cotAij + cotBij)*(vCir->p._z - ui._z);
         }
-        laplacian = (1 / (2 * areas)) * laplacian;
+        laplacianX = (1 / (2 * areas)) * laplacianX;
+        laplacianY = (1 / (2 * areas)) * laplacianY;
+        laplacianZ = (1 / (2 * areas)) * laplacianZ;
+//        std::cout << "laplacianX: " << laplacianX << std::endl;
+        QVector3D l(laplacianX,laplacianY,laplacianZ);
+        laplacians.push_back(l);
+        curvature.push_back(l.length() / 2);
+    }
+    for (const auto &vec:laplacians)
+        qDebug() << vec.length() / 2;
+    // normalize curvature
+    const auto pair = std::minmax_element(curvature.begin(), curvature.end());
+    double min = *pair.first;
+    double max = *pair.second;
+    for (auto &d:curvature) {
+        std::cout << "dBefore: " << d << std::endl;
+        d = (d-min) / max * 10;
+        std::cout << "dAfter: " << d << std::endl;
     }
 }
 
 void Mesh::drawMesh(bool wireframe) {
-    int i = 0;
     for (const auto & face : triangles) {
         if (wireframe) {
            glBegin(GL_LINE_STRIP);
         } else {
-            glColor3d(1,0,1);
             glBegin(GL_TRIANGLES);
         }
-
+        double v = curvature[face.vertices[0]];
+        glColor3d(v,v,v);
         glPointDraw(vertices[face.vertices[0]].p);
+        v = curvature[face.vertices[1]];
+        glColor3d(v,v,v);
         glPointDraw(vertices[face.vertices[1]].p);
+        v = curvature[face.vertices[2]];
+        glColor3d(v,v,v);
         glPointDraw(vertices[face.vertices[2]].p);
         glEnd();
-        ++i;
     }
 }
 
@@ -230,8 +270,8 @@ GeometricWorld::GeometricWorld()
 
 //Example with a bBox
 void GeometricWorld::draw() {
-    _mesh.drawMesh(true);
-//    _mesh.drawMesh(false);
+//    _mesh.drawMesh(true);
+    _mesh.drawMesh(false);
 }
 
 //Example with a wireframe bBox
