@@ -16,7 +16,7 @@ void glPointDraw(const Point & p) {
 
 Triangle::Triangle() {}
 
-size_t Triangle::centerIdx(size_t center)
+size_t Triangle::getCenterIdx(size_t center)
 {
     size_t i;
     for (i = 0; i < 3; ++i)

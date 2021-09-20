@@ -36,6 +36,8 @@ public:
     // Constraint: vertex i facing adjacent triangle i
     Triangle();
 //    ~Triangle();
+    // Gives internal idex of given vertex ind
+    size_t getCenterIdx(size_t center);
 };
 
 class Mesh
@@ -213,7 +215,7 @@ public:
 
     Circulator_on_vertices adjacent_vertices(std::size_t vIdx) {
         auto cof = incident_faces(vIdx);
-        int idx;
+        int idx = cof->getCenterIdx(vIdx);
         for (idx = 0 ; idx < 3 ; ++idx)
             if (cof->vertices[idx] == vIdx) break;
 //        int next = idx < 2 ? idx+1 : 0;

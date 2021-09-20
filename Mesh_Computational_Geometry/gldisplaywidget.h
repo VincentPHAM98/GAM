@@ -27,7 +27,7 @@ protected:
 private:
 
     QTimer _timer; // To update the scene
-    float _X, _Y ,_Z; // Translation
+    float _X = 0, _Y = 0 ,_Z = 0; // Translation
     float _angle; // Rotation
 
     QPoint _lastPosMouse; // To keep the last position of the mouse
