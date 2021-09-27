@@ -12,6 +12,7 @@ void glPointDraw(const Point & p) {
 
 Mesh::Mesh(){
     initFile("../2D_mesh_test.off");
+    edgeFlip(1,2);
 //    init2dBBox();
 //    points.push_back(Point(.25, 0, .25));
 //    vertices.push_back(4);
@@ -191,6 +192,14 @@ void Mesh::edgeFlip(int indFace1, int indFace2){
     int temp = faces[indFace1].adjFaces[(indSommetF1+2) % 3];
     faces[indFace1].adjFaces[indSommetF1] = faces[indFace2].adjFaces[(indSommetF2+2) % 3];
     faces[indFace2].adjFaces[indSommetF2] = temp;
+
+    for(int i = 0; i < 3; i++){
+        if (faces[faces[indFace1].adjFaces[indSommetF1+1]].adjFaces[i] == indSommetF1)
+            faces[faces[indFace1].adjFaces[indSommetF1+1]].adjFaces[i] = indSommetF2;
+        if (faces[faces[indFace1].adjFaces[indSommetF2+1]].adjFaces[i] == indSommetF2)
+            faces[faces[indFace1].adjFaces[indSommetF2+1]].adjFaces[i] = indSommetF1;
+    }
+
 }
 
 // cross / vectoriel
