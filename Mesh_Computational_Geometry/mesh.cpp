@@ -225,16 +225,16 @@ void Mesh::calculateLaplacian()
         laplacians.push_back(l);
         curvature.push_back(l.length() / 2);
     }
-    for (const auto &vec:laplacians)
-        qDebug() << vec.length() / 2;
     // normalize curvature
     const auto pair = std::minmax_element(curvature.begin(), curvature.end());
     double min = *pair.first;
+//    std::cout << "min: " << min << std::endl;
     double max = *pair.second;
-    for (auto &d:curvature) {
-        std::cout << "dBefore: " << d << std::endl;
-        d = (d-min) / max * 10;
-        std::cout << "dAfter: " << d << std::endl;
+//    std::cout << "max: " << max << std::endl;
+    for (double &d:curvature) {
+//        std::cout << "dBefore: " << d << std::endl;
+        d = (d-min) / (max-min);
+//        std::cout << "dAfter: " << d << std::endl;
     }
 }
 
@@ -246,13 +246,17 @@ void Mesh::drawMesh(bool wireframe) {
             glBegin(GL_TRIANGLES);
         }
         double v = curvature[face.vertices[0]];
-        glColor3d(v,v,v);
+        QColor c(0,0,0);
+//        std::cout << "log(v): " << 50*std::abs(std::log(v)) << std::endl;
+        c.setHsv(100*std::abs(std::log(v)),255,255);
+//        std::cout << "v*100: " << v*100 << std::endl;
+        glColor3d(c.red(),c.green(),c.blue());
         glPointDraw(vertices[face.vertices[0]].p);
         v = curvature[face.vertices[1]];
-        glColor3d(v,v,v);
+        glColor3d(c.red(),c.green(),c.blue());
         glPointDraw(vertices[face.vertices[1]].p);
         v = curvature[face.vertices[2]];
-        glColor3d(v,v,v);
+        glColor3d(c.red(),c.green(),c.blue());
         glPointDraw(vertices[face.vertices[2]].p);
         glEnd();
     }
