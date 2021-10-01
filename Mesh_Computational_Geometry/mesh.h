@@ -25,6 +25,9 @@ class Triangle;
 class Vertex
 {
 public:
+    Vertex(): p() {};
+    Vertex(const Point &_p): p(_p) {}
+    Vertex(const Point &_p, int id): p(_p), triangleIdx(id) {}
     Point p;
     int triangleIdx = -1;
 };
@@ -36,6 +39,8 @@ public:
     std::array<uint, 3> adjacent;
     // Constraint: vertex i facing adjacent triangle i
     Triangle();
+    Triangle(std::array<uint, 3> _vertices): vertices(_vertices) {}
+    Triangle(std::array<uint, 3> _vertices, std::array<uint, 3> _adjacent): vertices(_vertices), adjacent(_adjacent) {}
 //    ~Triangle();
     // Gives internal index of given vertex index
     size_t getInternalIdx(size_t vertexIdx, int shift) const;
@@ -217,7 +222,10 @@ public:
     void findTopology();
     void findTopology(const std::vector<Point> &points, const std::vector<std::array<uint, 3> > &faces);
     void calculateLaplacian();
+    void splitTriangle(int indFace, const Point &p);
+    void splitTriangleMiddle(int indFace);
     void drawMesh(bool wireframe = false);
+    void drawMeshLaplacian(bool wireframe = false);
     void drawMeshWireFrame();
 };
 

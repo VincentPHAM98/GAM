@@ -33,35 +33,13 @@ float Mesh::area(const Triangle &t) {
 }
 
 Mesh::Mesh() {
-    loadOFF("../data/queen.off");
+    loadOFF("../data/2D_mesh_test.off");
+    splitTriangleMiddle(3);
+//    loadOFF("../data/queen.off");
 //    loadOFF("../data/sphere.off");
 //    loadOFF("../data/cube.off");
 
-    calculateLaplacian();
-    // Circulator on vertex test
-//    Circulator_on_vertices cov = adjacent_vertices(0);
-//    Iterator_on_vertices its = vertices_begin();
-//    for (; its != vertices_past_the_end(); ++its) {
-//        int cmpt=0;
-//        auto cv=adjacent_vertices(its.getIdx());
-//        ++cv;
-//        auto end = adjacent_vertices(its.getIdx());
-//        for (; cv!=end; ++cv)
-//            cmpt++;
-//        std::cout<< "valence of the vertex : " << cmpt << std::endl;
-//    }
-    // Circulator on faces test
-//    Iterator_on_vertices its = vertices_begin();
-//    for (; its != vertices_past_the_end(); ++its) {
-//        int cmpt=0;
-//        auto cf=incident_faces(its.getIdx());
-//        ++cf;
-//        auto end = incident_faces(its.getIdx());
-//        for (; cf!=end; ++cf)
-//            cmpt++;
-//        std::cout<< "valence of the vertex : " << cmpt << std::endl;
-//    }
-
+//    calculateLaplacian();
 }
 
 
@@ -238,7 +216,67 @@ void Mesh::calculateLaplacian()
     }
 }
 
+void Mesh::splitTriangle(int indFace, const Point &newVertexPos)
+{
+    Triangle &t = triangles[indFace]; // current working face
+    // Adding new vertex to Mesh
+    Vertex v(newVertexPos, indFace);
+    vertices.push_back(v);
+    int idVertex = vertices.size() - 1;
+
+    // Creating new triangles
+    int t1Idx = (int)triangles.size();
+    int t2Idx = t1Idx+1;
+    triangles.push_back(Triangle({t.vertices[1], t.vertices[2], (uint)idVertex},
+                                 {t2Idx        , indFace      , t.adjacent[0]}));
+    triangles.push_back(Triangle({t.vertices[2], t.vertices[0], (uint)idVertex},
+                                 {indFace        , t1Idx      , t.adjacent[1]}));
+
+    // Modify adjacent triangles' opposite vertex indices
+    Triangle *currentT = &triangles[t.adjacent[0]];
+    int currentTIdxToModify = currentT->getInternalIdx(t.vertices[1],1);
+    currentT->adjacent[currentTIdxToModify] = t1Idx;
+
+    currentT = &triangles[t.adjacent[1]];
+    currentTIdxToModify = currentT->getInternalIdx(t.vertices[2],1);
+    currentT->adjacent[currentTIdxToModify] = t2Idx;
+
+    // finally modifying split triangle
+    t.vertices[2] = idVertex;
+    t.adjacent[0] = t1Idx;
+    t.adjacent[1] = t2Idx;
+
+}
+
+void Mesh::splitTriangleMiddle(int indFace)
+{
+    const Triangle &t = triangles[indFace];
+    // find middle point of triangle
+    double pX = 0., pY = 0., pZ = 0.;
+    for (int i = 0; i < 3; ++i) {
+        pX += vertices[t.vertices[i]].p._x;
+        pY += vertices[t.vertices[i]].p._y;
+        pZ += vertices[t.vertices[i]].p._z;
+    }
+    splitTriangle(indFace, Point(pX/3., pY/3., pZ/3.));
+}
+
 void Mesh::drawMesh(bool wireframe) {
+    for (const auto & face : triangles) {
+        if (wireframe) {
+           glBegin(GL_LINE_STRIP);
+        } else {
+            glBegin(GL_TRIANGLES);
+        }
+        glColor3d(1,1,1);
+        glPointDraw(vertices[face.vertices[0]].p);
+        glPointDraw(vertices[face.vertices[1]].p);
+        glPointDraw(vertices[face.vertices[2]].p);
+        glEnd();
+    }
+}
+
+void Mesh::drawMeshLaplacian(bool wireframe) {
     for (const auto & face : triangles) {
         if (wireframe) {
            glBegin(GL_LINE_STRIP);
@@ -247,9 +285,7 @@ void Mesh::drawMesh(bool wireframe) {
         }
         double v = curvature[face.vertices[0]];
         QColor c(0,0,0);
-//        std::cout << "log(v): " << 50*std::abs(std::log(v)) << std::endl;
-        c.setHsv(100*std::abs(std::log(v)),255,255);
-//        std::cout << "v*100: " << v*100 << std::endl;
+        c.setHsv((std::log(1+100*v)),255,255);
         glColor3d(c.red(),c.green(),c.blue());
         glPointDraw(vertices[face.vertices[0]].p);
         v = curvature[face.vertices[1]];
@@ -274,8 +310,8 @@ GeometricWorld::GeometricWorld()
 
 //Example with a bBox
 void GeometricWorld::draw() {
-//    _mesh.drawMesh(true);
-    _mesh.drawMesh(false);
+    _mesh.drawMesh(true);
+//    _mesh.drawMesh(false);
 }
 
 //Example with a wireframe bBox
