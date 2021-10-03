@@ -43,7 +43,7 @@ public:
     Triangle(std::array<uint, 3> _vertices, std::array<uint, 3> _adjacent): vertices(_vertices), adjacent(_adjacent) {}
 //    ~Triangle();
     // Gives internal index of given vertex index
-    size_t getInternalIdx(size_t vertexIdx, int shift) const;
+    size_t getInternalIdx(size_t vertexIdx, int shift = 0) const;
 };
 
 class Mesh
@@ -224,6 +224,7 @@ public:
     void calculateLaplacian();
     void splitTriangle(int indFace, const Point &p);
     void splitTriangleMiddle(int indFace);
+    void edgeFlip(int indFace1, int indFace2);
     void drawMesh(bool wireframe = false);
     void drawMeshLaplacian(bool wireframe = false);
     void drawMeshWireFrame();

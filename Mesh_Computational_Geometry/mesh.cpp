@@ -17,7 +17,7 @@ void glPointDraw(const Point & p) {
 
 Triangle::Triangle() {}
 
-size_t Triangle::getInternalIdx(size_t vertexIdx, int shift = 0) const
+size_t Triangle::getInternalIdx(size_t vertexIdx, int shift) const
 {
     size_t i;
     for (i = 0; i < 3; ++i)
@@ -34,7 +34,8 @@ float Mesh::area(const Triangle &t) {
 
 Mesh::Mesh() {
     loadOFF("../data/2D_mesh_test.off");
-    splitTriangleMiddle(3);
+//    splitTriangleMiddle(0);
+    edgeFlip(0,1);
 //    loadOFF("../data/queen.off");
 //    loadOFF("../data/sphere.off");
 //    loadOFF("../data/cube.off");
@@ -224,7 +225,7 @@ void Mesh::splitTriangle(int indFace, const Point &newVertexPos)
     vertices.push_back(v);
     int idVertex = vertices.size() - 1;
 
-    // Creating new triangles
+    // Adding new triangles into structure
     int t1Idx = (int)triangles.size();
     int t2Idx = t1Idx+1;
     triangles.push_back(Triangle({t.vertices[1], t.vertices[2], (uint)idVertex},
@@ -259,6 +260,38 @@ void Mesh::splitTriangleMiddle(int indFace)
         pZ += vertices[t.vertices[i]].p._z;
     }
     splitTriangle(indFace, Point(pX/3., pY/3., pZ/3.));
+}
+
+void Mesh::edgeFlip(int indFace1, int indFace2)
+{
+    Triangle &t1 = triangles[indFace1];
+    Triangle &t2 = triangles[indFace2];
+    // Step 1: finding common edge indices
+    int i;
+    for (i = 0; true; ++i) {
+        if (t1.adjacent[i] == indFace2) break;
+        if (i > 2) throw std::exception();
+    }
+    std::pair<int, int> edge = {t1.vertices[(i+1)%3], t1.vertices[(i+2)%3]};
+    // Step 2: updating adjacent faces' topology
+    // Only 2 to modify
+    int t1AdjIdx = t1.adjacent[t1.getInternalIdx(edge.second)];
+    int t2AdjIdx = t2.adjacent[t2.getInternalIdx(edge.first)];
+    Triangle &t1Adj = triangles[t1AdjIdx];
+    Triangle &t2Adj = triangles[t2AdjIdx];
+    t1Adj.adjacent[t1Adj.getInternalIdx(edge.first, 2)] = indFace2;
+    t2Adj.adjacent[t2Adj.getInternalIdx(edge.second, 2)] = indFace1;
+
+    // Step 3: Modifying faces' edges and topology
+    t1.adjacent[t1.getInternalIdx(edge.second)] = indFace2;
+    t1.adjacent[t1.getInternalIdx(edge.second, 1)] = t2AdjIdx;
+    t2.adjacent[t2.getInternalIdx(edge.first)] = indFace1;
+    t2.adjacent[t2.getInternalIdx(edge.first, 1)] = t1AdjIdx;
+
+    t1.vertices[t1.getInternalIdx(edge.first)] = t2.vertices[t2.getInternalIdx(edge.first, 1)];
+    t2.vertices[t2.getInternalIdx(edge.second)] = t1.vertices[t1.getInternalIdx(edge.second, 1)];
+
+
 }
 
 void Mesh::drawMesh(bool wireframe) {
