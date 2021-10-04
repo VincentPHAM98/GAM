@@ -77,9 +77,10 @@ public:
 
     void splitTriangle(int indFace, int indVertex);
     void edgeFlip(int indFace1, int indFace2);
-    float orientaion2D(Point p1, Point p2, Point p3);
+    double orientation2D(Point p1, Point p2, Point p3);
     bool isInside(Point p, Face f);
-    void insertPoint(Point p);
+    void insertPoint2D(Point p);
+    bool is2D(int indF);
 
 
 };

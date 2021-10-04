@@ -11,10 +11,13 @@ void glPointDraw(const Point & p) {
 }
 
 Mesh::Mesh(){
-    initFile("../2D_mesh_test.off");
-    edgeFlip(1,2);
-//    init2dBBox();
-//    points.push_back(Point(.25, 0, .25));
+    //initFile("../2D_mesh_test.off");
+    init2dBBox();
+    insertPoint2D(Point (0.25, 0.25, 0.0));
+    //cout << isInside(Point(.25, .25, 0.), faces[0]) << endl;
+    //isInside(Point(.25, .25, 0.), faces[1]);
+    //orientation2D(Point(0., 0., 0.), Point(1., 0., 0.), Point(100., 1., 0.));
+//    points.push_back(Point(.25, .25, 0.));
 //    vertices.push_back(4);
 //    splitTriangle(0,4);
 }
@@ -59,9 +62,9 @@ void Mesh::initPyramid(){
 void Mesh::init2dBBox(){
     clearData();
     points.push_back(Point());
-    points.push_back(Point(0.0, 0.0, 1.0));
+    points.push_back(Point(0.0, 1.0, 0.0));
     points.push_back(Point(1.0, 0.0, 0.0));
-    points.push_back(Point(1.0, 0.0, 1.0));
+    points.push_back(Point(1.0, 1.0, 0.0));
 
     for(int i=0; i<points.size(); i++){
         vertices.push_back(Vertex(i));
@@ -203,23 +206,48 @@ void Mesh::edgeFlip(int indFace1, int indFace2){
 }
 
 // cross / vectoriel
-float Mesh::orientaion2D(Point p1, Point p2, Point p3){
-    int x1 = p2._x - p1._x;
-    int y1 = p2._y - p1._y;
-    int x2 = p3._x - p1._x;
-    int y2 = p3._y - p1._y;
-
-    return x1*y2 - x2*y1;
+double Mesh::orientation2D(Point p1, Point p2, Point p3){
+    double uX = p2._x - p1._x;
+    double uY = p2._y - p1._y;
+    double vX = p3._x - p1._x;
+    double vY = p3._y - p1._y;
+    return uX*vY - vX*uY;
 }
 
 bool Mesh::isInside(Point p, Face f){
-    return (orientaion2D(points[f.vertices[0]], points[f.vertices[1]], p) > 0 &&
-            orientaion2D(points[f.vertices[1]], points[f.vertices[2]], p) > 0 &&
-            orientaion2D(points[f.vertices[2]], points[f.vertices[0]], p) > 0);
+    return (orientation2D(points[f.vertices[0]], points[f.vertices[1]], p) > 0. &&
+            orientation2D(points[f.vertices[1]], points[f.vertices[2]], p) > 0. &&
+            orientation2D(points[f.vertices[2]], points[f.vertices[0]], p) > 0.);
 }
 
-void insertPoint(Point p){
+bool Mesh::is2D(int indF){
+    return points[faces[indF].vertices[0]]._z == 0. &&
+           points[faces[indF].vertices[1]]._z == 0. &&
+           points[faces[indF].vertices[2]]._z == 0.;
+}
 
+void Mesh::insertPoint2D(Point p){
+    int indF = rand() % faces.size();
+    while(!isInside(p, faces[1])){
+        cout << indF << endl;
+        cout << orientation2D(points[faces[indF].vertices[0]], points[faces[indF].vertices[1]], p) << endl;
+        break;
+        if(orientation2D(points[faces[indF].vertices[0]], points[faces[indF].vertices[1]], p) > 0.)
+            indF = faces[indF].adjFaces[2];
+        else if(orientation2D(points[faces[indF].vertices[1]], points[faces[indF].vertices[2]], p) > 0.)
+            indF = faces[indF].adjFaces[0];
+        else if(orientation2D(points[faces[indF].vertices[2]], points[faces[indF].vertices[0]], p) > 0.)
+            indF = faces[indF].adjFaces[1];
+        // si on est hors de l'enveloppe
+        if(!is2D(indF))
+            break;
+    }
+
+    points.push_back(p);
+    vertices.push_back(Vertex(vertices.size()));
+    splitTriangle(indF, vertices.size()-1);
+
+    // TO DO finir l'enveloppe convexe si ajout en dehors
 }
 
 void Mesh::drawMesh(){
