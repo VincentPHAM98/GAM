@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <time.h>
 
 using namespace std;
 
@@ -11,9 +12,14 @@ void glPointDraw(const Point & p) {
 }
 
 Mesh::Mesh(){
-    //initFile("../2D_mesh_test.off");
-    init2dBBox();
-    insertPoint2D(Point (0.25, 0.25, 0.0));
+    srand (time(NULL));
+    initFile("../2D_mesh_test.off");
+    //init2dBBox();
+//    for(int i = 0; i < 10; i++){
+//        insertPoint2D(Point(rand()%20 - 10., rand()%20 - 10., 0.));
+//    }
+//    insertPoint2D(Point (0.25, 0.25, 0.0));
+    insertPoint2D(Point (2., 2., 0.0));
     //cout << isInside(Point(.25, .25, 0.), faces[0]) << endl;
     //isInside(Point(.25, .25, 0.), faces[1]);
     //orientation2D(Point(0., 0., 0.), Point(1., 0., 0.), Point(100., 1., 0.));
@@ -228,26 +234,26 @@ bool Mesh::is2D(int indF){
 
 void Mesh::insertPoint2D(Point p){
     int indF = rand() % faces.size();
-    while(!isInside(p, faces[1])){
-        cout << indF << endl;
-        cout << orientation2D(points[faces[indF].vertices[0]], points[faces[indF].vertices[1]], p) << endl;
-        break;
-        if(orientation2D(points[faces[indF].vertices[0]], points[faces[indF].vertices[1]], p) > 0.)
+    while(!is2D(indF))
+        indF = rand() % faces.size();
+    while(!isInside(p, faces[indF])){
+        if(orientation2D(points[faces[indF].vertices[0]], points[faces[indF].vertices[1]], p) < 0.)
             indF = faces[indF].adjFaces[2];
-        else if(orientation2D(points[faces[indF].vertices[1]], points[faces[indF].vertices[2]], p) > 0.)
+        else if(orientation2D(points[faces[indF].vertices[1]], points[faces[indF].vertices[2]], p) < 0.)
             indF = faces[indF].adjFaces[0];
-        else if(orientation2D(points[faces[indF].vertices[2]], points[faces[indF].vertices[0]], p) > 0.)
+        else if(orientation2D(points[faces[indF].vertices[2]], points[faces[indF].vertices[0]], p) < 0.)
             indF = faces[indF].adjFaces[1];
         // si on est hors de l'enveloppe
         if(!is2D(indF))
             break;
     }
-
+    int temp = vertices.size();
     points.push_back(p);
-    vertices.push_back(Vertex(vertices.size()));
-    splitTriangle(indF, vertices.size()-1);
+    vertices.push_back(Vertex(temp));
+    splitTriangle(indF, temp);
 
     // TO DO finir l'enveloppe convexe si ajout en dehors
+
 }
 
 void Mesh::drawMesh(){
