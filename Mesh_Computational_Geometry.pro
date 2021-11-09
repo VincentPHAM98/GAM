@@ -30,5 +30,6 @@ LIBS = -lGLU
 #LIBS += -lOpengl32
 
 DISTFILES += \
-    queen.off
+    queen.off \
+    test.off
 

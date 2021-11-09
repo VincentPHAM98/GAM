@@ -4,6 +4,7 @@
 #include <QGLWidget>
 #include <vector>
 #include <string>
+#include <queue>
 
 using namespace std;
 
@@ -65,8 +66,13 @@ public:
     map<pair<int, int>, pair<int, int>> topology;
     Mesh(); // Constructors automatically called to initialize a Mesh (default strategy)
     //~Mesh(); // Destructor automatically called before a Mesh is destroyed (default strategy)
+
+    int currentFace;
+    bool highlightNeighbors;
+
     void drawMesh();
     void drawMeshWireFrame();
+
     void initTetrahedron();
     void initPyramid();
     void init2dBBox();
@@ -76,12 +82,27 @@ public:
     void clearData();
 
     void splitTriangle(int indFace, int indVertex);
+    void splitTriangle(int idFace, Point p);
+    void splitTriangleAtCenter(int idFace);
+
     void edgeFlip(int indFace1, int indFace2);
     double orientation2D(Point p1, Point p2, Point p3);
+    double orientation2D(int v1, int v2, int v3);
     bool isInside(Point p, Face f);
     void insertPoint2D(Point p);
-    bool is2D(int indF);
+    void insertRandPoint2D(int max);
+    bool isVert2D(int indV);
+    bool isFace2D(int indF);
 
+    int vertIndexInFace(int idFace, int idVert);
+    int infiniteInFace(int idFace);
+
+    // retourne l'id du sommet dans idFace2 opposé à idFace1
+    int opposedVert(int idFace1, int idFace2);
+
+
+    void checkFaceDelaunay(queue <pair<int, int>> & nonDelaunay, int idFace);
+    void makeDelaunay();
 
 };
 

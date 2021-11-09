@@ -20,6 +20,8 @@ public:
 
     bool toggleWireFrame;
 
+    GeometricWorld _geomWorld; // The scene to be displayed
+
 protected:
     // Mouse Management
     void mousePressEvent(QMouseEvent *event);
@@ -34,7 +36,6 @@ private:
 
     QPoint _lastPosMouse; // To keep the last position of the mouse
 
-    GeometricWorld _geomWorld; // The scene to be displayed
 };
 
 #endif // GLDISPLAYWIDGET_H

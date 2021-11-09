@@ -49,8 +49,6 @@ void GLDisplayWidget::paintGL(){
     // Color for your _geomWorld
     glColor3f(0, 1 ,0);
 
-    // example with a tetraedre
-
     if(toggleWireFrame)
         _geomWorld.drawWireFrame();
     else
