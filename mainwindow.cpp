@@ -53,5 +53,6 @@ void MainWindow::on_edgeFlipButton_released()
 {
     int face1 = ui->flipFace1->value();
     int face2 = ui->flipFace2->value();
+    cout << "flipping : " << face1 << " " << face2 << endl;
     ui->widget->_geomWorld._mesh.edgeFlip(face1, face2);
 }

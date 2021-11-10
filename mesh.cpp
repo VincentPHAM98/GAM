@@ -17,7 +17,7 @@ Mesh::Mesh(){
     currentFace = 0;
     highlightNeighbors = 0;
 //    cout << "test : " << stof("1.5") << endl;
-    initFile("../test.off");
+//    initFile("../test.off");
 //    makeDelaunay();
 
     //init2dBBox();
@@ -215,23 +215,35 @@ void Mesh::edgeFlip(int indFace1, int indFace2){
             indSommetF2 = i;
         }
     }
-    if(sommetF1 == -1) return;
+    if(sommetF1 == -1){
+        cout << "Cannot flip this edge" << endl;
+        return;
+    }
 
     faces[indFace1].vertices[(indSommetF1+2) % 3] = sommetF2;
     faces[indFace2].vertices[(indSommetF2+2) % 3] = sommetF1;
 
     // update adjacence
-    faces[indFace1].adjFaces[(indSommetF1+2) % 3] = indFace2;
-    faces[indFace2].adjFaces[(indSommetF2+2) % 3] = indFace1;
-    int temp = faces[indFace1].adjFaces[(indSommetF1+2) % 3];
-    faces[indFace1].adjFaces[indSommetF1] = faces[indFace2].adjFaces[(indSommetF2+2) % 3];
+//    faces[indFace1].adjFaces[(indSommetF1+2) % 3] = indFace2;
+//    faces[indFace2].adjFaces[(indSommetF2+2) % 3] = indFace1;
+//    int temp = faces[indFace1].adjFaces[(indSommetF1+2) % 3];
+//    faces[indFace1].adjFaces[indSommetF1] = faces[indFace2].adjFaces[(indSommetF2+2) % 3];
+//    faces[indFace2].adjFaces[indSommetF2] = temp;
+
+    int temp = faces[indFace1].adjFaces[(indSommetF1+1) % 3];
+    int temp2 = faces[indFace2].adjFaces[(indSommetF2+1) % 3];
+    faces[indFace1].adjFaces[indSommetF1] = temp2;
     faces[indFace2].adjFaces[indSommetF2] = temp;
 
+    faces[indFace1].adjFaces[(indSommetF1+1) % 3] = indFace2;
+    faces[indFace2].adjFaces[(indSommetF2+1) % 3] = indFace1;
+
     for(int i = 0; i < 3; i++){
-        if (faces[faces[indFace1].adjFaces[indSommetF1+1]].adjFaces[i] == indSommetF1)
-            faces[faces[indFace1].adjFaces[indSommetF1+1]].adjFaces[i] = indSommetF2;
-        if (faces[faces[indFace1].adjFaces[indSommetF2+1]].adjFaces[i] == indSommetF2)
-            faces[faces[indFace1].adjFaces[indSommetF2+1]].adjFaces[i] = indSommetF1;
+        if (faces[temp].adjFaces[i] == indFace1){
+            faces[temp].adjFaces[i] = indFace2;
+        }
+        if (faces[temp2].adjFaces[i] == indFace2)
+            faces[temp2].adjFaces[i] = indFace1;
     }
 }
 
