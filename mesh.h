@@ -89,11 +89,16 @@ public:
     double orientation2D(Point p1, Point p2, Point p3);
     double orientation2D(int v1, int v2, int v3);
     bool isInside(Point p, Face f);
+
     void insertPoint2D(Point p);
     void insertRandPoint2D(int max);
+    // complete l'enveloppe convexe avec des edge flip
+    void completeConvexHull(int idFace, int idVert);
+
     bool isVert2D(int indV);
     bool isFace2D(int indF);
 
+    int findAdjFace(int idFace, int id2find);
     int vertIndexInFace(int idFace, int idVert);
     int infiniteInFace(int idFace);
 

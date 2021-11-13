@@ -32,6 +32,8 @@ private slots:
 
     void on_edgeFlipButton_released();
 
+    void on_addPointButton_released();
+
 private:
     Ui::MainWindow *ui;
 };

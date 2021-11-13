@@ -20,6 +20,7 @@ void MainWindow::on_pushButton_3_released()
 
 void MainWindow::on_pushButton_2_released()
 {
+    cout << "inserting point" << endl;
     ui->widget->_geomWorld._mesh.insertRandPoint2D(5);
 }
 
@@ -28,8 +29,6 @@ void MainWindow::on_initButton_released()
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open off file"), "", tr("Off files (*.off)"));
     ui->widget->_geomWorld._mesh.initFile(fileName.toStdString());
     ui->nbTriangleLabel->setText(QString::number(ui->widget->_geomWorld._mesh.faces.size()));
-
-//    ui->widget->_geomWorld._mesh.splitTriangleAtCenter(0);
 }
 
 void MainWindow::on_splitCenterButton_released()
@@ -53,6 +52,10 @@ void MainWindow::on_edgeFlipButton_released()
 {
     int face1 = ui->flipFace1->value();
     int face2 = ui->flipFace2->value();
-    cout << "flipping : " << face1 << " " << face2 << endl;
     ui->widget->_geomWorld._mesh.edgeFlip(face1, face2);
+}
+
+void MainWindow::on_addPointButton_released()
+{
+    ui->widget->_geomWorld._mesh.insertPoint2D(Point(ui->xBox->text().toFloat(), ui->yBox->text().toFloat(), 0));
 }

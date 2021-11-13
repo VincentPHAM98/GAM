@@ -16,19 +16,8 @@ Mesh::Mesh(){
     srand (time(NULL));
     currentFace = 0;
     highlightNeighbors = 0;
-//    cout << "test : " << stof("1.5") << endl;
-//    initFile("../test.off");
-//    makeDelaunay();
 
-    //init2dBBox();
-//    for(int i = 0; i < 10; i++){
-//        insertPoint2D(Point(rand()%20 - 10., rand()%20 - 10., 0.));
-//    }
-//    insertPoint2D(Point (0.25, 0.25, 0.0));
-    //insertPoint2D(Point (2., 2., 0.0));
-    //cout << isInside(Point(.25, .25, 0.), faces[0]) << endl;
-    //isInside(Point(.25, .25, 0.), faces[1]);
-    //orientation2D(Point(0., 0., 0.), Point(1., 0., 0.), Point(100., 1., 0.));
+    cout << orientation2D(Point(2,2,0), Point(1,1,0), Point(0,2,0)) << endl;
 }
 
 void Mesh::initTetrahedron(){
@@ -166,6 +155,9 @@ void Mesh::clearData(){
 
 void Mesh::splitTriangle(int indFace, int indVertex){
     int nbFace = faces.size();
+    // update des voisins
+    faces[faces[indFace].adjFaces[0]].adjFaces[findAdjFace(faces[indFace].adjFaces[0], indFace)] = nbFace;
+    faces[faces[indFace].adjFaces[1]].adjFaces[findAdjFace(faces[indFace].adjFaces[1], indFace)] = nbFace + 1;
 
     // Creating sub triangles
     faces.push_back(Face(faces[indFace].vertices[1], faces[indFace].vertices[2], indVertex,
@@ -177,16 +169,11 @@ void Mesh::splitTriangle(int indFace, int indVertex){
     faces[indFace].vertices[2] = indVertex;
     faces[indFace].adjFaces[0] = nbFace;
     faces[indFace].adjFaces[1] = nbFace + 1;
-
-    // Updating topology
-    handleFace(faces[indFace].vertices[0], faces[indFace].vertices[1], faces[indFace].vertices[2], indFace);
-    handleFace(faces[nbFace].vertices[0], faces[nbFace].vertices[1], faces[nbFace].vertices[2], nbFace);
-    handleFace(faces[nbFace + 1].vertices[0], faces[nbFace + 1].vertices[1], faces[nbFace + 1].vertices[2], nbFace + 1);
 }
 
 void Mesh::splitTriangle(int idFace, Point p){
     points.push_back(p);
-    vertices.push_back(vertices.size());
+    vertices.push_back(Vertex(vertices.size()));
     splitTriangle(idFace, vertices.back().pointIndex);
 }
 
@@ -205,6 +192,7 @@ void Mesh::splitTriangleAtCenter(int idFace){
 
 void Mesh::edgeFlip(int indFace1, int indFace2){
     int sommetF1 = -1, sommetF2, indSommetF1, indSommetF2;
+    // cherche l'arrête commune et stock des infos pour la suite
     for(int i=0; i<3; i++){
         if(faces[indFace1].adjFaces[i] == indFace2){
             sommetF1 = faces[indFace1].vertices[i];
@@ -219,17 +207,11 @@ void Mesh::edgeFlip(int indFace1, int indFace2){
         cout << "Cannot flip this edge" << endl;
         return;
     }
-
+    // update des sommets pour flipper l'arrête
     faces[indFace1].vertices[(indSommetF1+2) % 3] = sommetF2;
     faces[indFace2].vertices[(indSommetF2+2) % 3] = sommetF1;
 
-    // update adjacence
-//    faces[indFace1].adjFaces[(indSommetF1+2) % 3] = indFace2;
-//    faces[indFace2].adjFaces[(indSommetF2+2) % 3] = indFace1;
-//    int temp = faces[indFace1].adjFaces[(indSommetF1+2) % 3];
-//    faces[indFace1].adjFaces[indSommetF1] = faces[indFace2].adjFaces[(indSommetF2+2) % 3];
-//    faces[indFace2].adjFaces[indSommetF2] = temp;
-
+    // update de l'adjacence des faces flippés
     int temp = faces[indFace1].adjFaces[(indSommetF1+1) % 3];
     int temp2 = faces[indFace2].adjFaces[(indSommetF2+1) % 3];
     faces[indFace1].adjFaces[indSommetF1] = temp2;
@@ -238,6 +220,7 @@ void Mesh::edgeFlip(int indFace1, int indFace2){
     faces[indFace1].adjFaces[(indSommetF1+1) % 3] = indFace2;
     faces[indFace2].adjFaces[(indSommetF2+1) % 3] = indFace1;
 
+    // update de l'adjacence des faces voisines flippés
     for(int i = 0; i < 3; i++){
         if (faces[temp].adjFaces[i] == indFace1){
             faces[temp].adjFaces[i] = indFace2;
@@ -280,6 +263,14 @@ bool Mesh::isFace2D(int indF){
            isVert2D(faces[indF].vertices[2]);
 }
 
+int Mesh::findAdjFace(int idFace, int id2find){
+    for(int i = 0; i < 3; i++){
+        if(faces[idFace].adjFaces[i] == id2find)
+            return i;
+    }
+    return -1;
+}
+
 int Mesh::vertIndexInFace(int idFace, int idVert){
     for(int i = 0; i < 3; i++){
         if(faces[idFace].vertices[i] == idVert)
@@ -296,12 +287,17 @@ int Mesh::infiniteInFace(int idFace){
     return -1;
 }
 
-int a,b,c;
 void Mesh::insertPoint2D(Point p){
+    cout << "début insertion" << endl;
+    // on commence sur une face aléatoire pas reliée au point infini
     int indF = rand() % faces.size();
     while(!isFace2D(indF))
         indF = rand() % faces.size();
+
+    // marche pour trouver la bonne face
+    int n = 0;
     while(!isInside(p, faces[indF])){
+        cout << indF << endl;
         if(orientation2D(points[faces[indF].vertices[0]], points[faces[indF].vertices[1]], p) < 0.)
             indF = faces[indF].adjFaces[2];
         else if(orientation2D(points[faces[indF].vertices[1]], points[faces[indF].vertices[2]], p) < 0.)
@@ -311,38 +307,63 @@ void Mesh::insertPoint2D(Point p){
         // si on est hors de l'enveloppe
         if(!isFace2D(indF))
             break;
+        if(n++ > faces.size()){
+            cout << "Failed to insert point" << endl;
+            return;
+        }
     }
+    cout << "fin marche" << endl;
     int indV = vertices.size();
     points.push_back(p);
     vertices.push_back(Vertex(indV));
     splitTriangle(indF, indV);
+    cout << "split" << endl << endl;
 
     // TO DO finir l'enveloppe convexe si ajout en dehors
-//    if(!isFace2D(indF))
-//        indF = faces[indF].adjFaces[infiniteInFace(indF)];
-
-//    a = indF;
-
-//    int indV2 = faces[indF].vertices[(vertIndexInFace(indF, indV) + 1)%3];
-//    int indFGauche1 = faces[indF].adjFaces[(vertIndexInFace(indF, indV) + 2)%3];
-//    int indFGauche2 = faces[indFGauche1].adjFaces[vertIndexInFace(indFGauche1, indV)];
-//    int indV3 = faces[indFGauche2].vertices[(vertIndexInFace(indFGauche2, indV2) + 2)%3];
-
-//    b = indFGauche1;
-//    c = indFGauche2;
-//    cout << indV << " " << indV2 << " " << indV3 << " " << indFGauche1 << " " << indFGauche2 << endl;
-
-//    cout << orientation2D(indV, indV2, indV3) << endl;
-//    if(orientation2D(indV, indV2, indV3) < 0.){
-//        edgeFlip(indFGauche1, indFGauche2);
-//    }
-//    edgeFlip(7, 8);
-//    edgeFlip(9, 14);
+    if(!isFace2D(indF)){
+        indF = faces[indF].adjFaces[infiniteInFace(indF)];
+        completeConvexHull(indF, indV);
+    }
+    currentFace = indF;
 
 }
 
+void  Mesh::completeConvexHull(int idFace, int idVert){
+    // Complete à droite (sens trigo)
+    int tempFace = idFace;
+    int face2Flip1 = faces[tempFace].adjFaces[(vertIndexInFace(tempFace, idVert)+2)%3];
+    int face2Flip2 = faces[face2Flip1].adjFaces[(vertIndexInFace(face2Flip1, idVert))];
+    int idV2 = faces[face2Flip1].vertices[(infiniteInFace(face2Flip1)+1)%3];
+    int idV3 = faces[face2Flip2].vertices[(infiniteInFace(face2Flip2)+1)%3];
+
+    while(orientation2D(idVert, idV2, idV3) < 0.){
+        edgeFlip(face2Flip1, face2Flip2);
+        tempFace = faces[tempFace].adjFaces[(vertIndexInFace(tempFace, idVert)+2)%3];
+        face2Flip1 = faces[tempFace].adjFaces[(vertIndexInFace(tempFace, idVert)+2)%3];
+        face2Flip2 = faces[face2Flip1].adjFaces[(vertIndexInFace(face2Flip1, idVert))];
+        idV2 = faces[face2Flip1].vertices[(infiniteInFace(face2Flip1)+1)%3];
+        idV3 = faces[face2Flip2].vertices[(infiniteInFace(face2Flip2)+1)%3];
+    }
+
+    // Complete à gauche (sens non trigo)
+    tempFace = idFace;
+    face2Flip1 = faces[tempFace].adjFaces[(vertIndexInFace(tempFace, idVert)+1)%3];
+    face2Flip2 = faces[face2Flip1].adjFaces[(vertIndexInFace(face2Flip1, idVert))];
+    idV2 = faces[face2Flip1].vertices[(infiniteInFace(face2Flip1)+2)%3];
+    idV3 = faces[face2Flip2].vertices[(infiniteInFace(face2Flip2)+2)%3];
+
+    while(orientation2D(idVert, idV2, idV3) > 0.){
+        edgeFlip(face2Flip1, face2Flip2);
+        tempFace = faces[tempFace].adjFaces[(vertIndexInFace(tempFace, idVert)+1)%3];
+        face2Flip1 = faces[tempFace].adjFaces[(vertIndexInFace(tempFace, idVert)+1)%3];
+        face2Flip2 = faces[face2Flip1].adjFaces[(vertIndexInFace(face2Flip1, idVert))];
+        idV2 = faces[face2Flip1].vertices[(infiniteInFace(face2Flip1)+2)%3];
+        idV3 = faces[face2Flip2].vertices[(infiniteInFace(face2Flip2)+2)%3];
+    }
+}
+
 void Mesh::insertRandPoint2D(int max){
-    insertPoint2D(Point(rand()%max, rand()%max, 0));
+    insertPoint2D(Point(rand()%(2*max) - max, rand()%(2*max) - max, 0));
 }
 
 int Mesh::opposedVert(int idFace1, int idFace2){
