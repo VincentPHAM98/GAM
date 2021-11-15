@@ -59,3 +59,8 @@ void MainWindow::on_addPointButton_released()
 {
     ui->widget->_geomWorld._mesh.insertPoint2D(Point(ui->xBox->text().toFloat(), ui->yBox->text().toFloat(), 0));
 }
+
+void MainWindow::on_DelaunayButton_released()
+{
+    ui->widget->_geomWorld._mesh.makeDelaunay();
+}

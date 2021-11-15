@@ -34,6 +34,8 @@ private slots:
 
     void on_addPointButton_released();
 
+    void on_DelaunayButton_released();
+
 private:
     Ui::MainWindow *ui;
 };
