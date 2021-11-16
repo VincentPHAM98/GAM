@@ -22,6 +22,8 @@ void GLDisplayWidget::initializeGL() {
     glEnable(GL_LIGHT0);
     glEnable(GL_COLOR_MATERIAL);
 
+    toggleWireFrame = false;
+
     //** TP : To add....
     // Construction of the GeometricWorld before it is displayed
     // It can also be constructed following a signal (button)
@@ -44,9 +46,10 @@ void GLDisplayWidget::paintGL() {
     // Color for your _geomWorld
     glColor3f(0, 1, 0);
 
-    // example with a tetraedre
-    _geomWorld.drawWireFrame();
-    _geomWorld.draw();
+    if(toggleWireFrame)
+        _geomWorld.drawWireFrame();
+    else
+        _geomWorld.draw();
 }
 
 void GLDisplayWidget::resizeGL(int width, int height) {
@@ -68,11 +71,10 @@ void GLDisplayWidget::mousePressEvent(QMouseEvent *event) {
 // Mouse movement management
 void GLDisplayWidget::mouseMoveEvent(QMouseEvent *event) {
     int dx = event->x() - _lastPosMouse.x();
-    //    int dy = event->y() - _lastPosMouse.y();
+    // int dy = event->y() - lastPosMouse.y();
 
     if (event != NULL) {
         _angle += dx;
-        //        _angle += dy;
         _lastPosMouse = event->pos();
 
         updateGL();

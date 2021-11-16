@@ -5,6 +5,11 @@
 #include <QGLWidget>
 #include <fstream>
 #include <iterator>
+#include <queue>
+#include <string>
+#include <vector>
+
+using namespace std;
 
 // TO MODIFY
 class Point {
@@ -29,6 +34,12 @@ class Vertex {
     Vertex(const Point& _p, int id) : p(_p), triangleIdx(id) {}
     Point p;
     int triangleIdx = -1;
+
+    int pointIndex;
+    int faceIndex;
+
+    Vertex(int _pointIndex) : pointIndex(_pointIndex) {}
+    Vertex(int _pointIndex, int _faceIndex) : pointIndex(_pointIndex), faceIndex(_faceIndex) {}
 };
 
 class Triangle {
@@ -46,6 +57,28 @@ class Triangle {
     size_t getExternalIdx(size_t vertexIdx, int shift = 0) const;
 };
 
+class Face {
+   public:
+    int vertices[3];
+    int adjFaces[3];
+
+    Face(int _v1, int _v2, int _v3) {
+        vertices[0] = _v1;
+        vertices[1] = _v2;
+        vertices[2] = _v3;
+    }
+
+    Face(int _v1, int _v2, int _v3, int _f1, int _f2, int _f3) {
+        vertices[0] = _v1;
+        vertices[1] = _v2;
+        vertices[2] = _v3;
+
+        adjFaces[0] = _f1;
+        adjFaces[1] = _f2;
+        adjFaces[2] = _f3;
+    }
+};
+
 class Mesh {
     std::vector<Vertex> vertices;
     std::vector<Triangle> triangles;
@@ -53,8 +86,6 @@ class Mesh {
     std::vector<double> curvature;
 
    public:
-    // Arête de 2 sommets
-    using Edge = std::pair<int, int>;
     Mesh();
     //~Mesh();
     struct Iterator_on_vertices {
@@ -241,10 +272,15 @@ class Mesh {
     }
 
     float area(const Triangle& t);
+
     void loadOFF(std::string path);
+    void initFile(string filepath);
+
     void findTopology();
-    void findTopology(const std::vector<Point>& points, const std::vector<std::array<uint, 3> >& faces);
     void calculateLaplacian();
+
+
+    void splitTriangle(int indFace, int indVertex);
     uint splitTriangle(uint indFace, const Point& p);
     uint splitTriangleMiddle(int indFace);
     void edgeFlip(int indFace1, int indFace2);
@@ -252,12 +288,44 @@ class Mesh {
     float orientation2D(int i1, int i2, int i3) const;
     float orientation2D(const Triangle& t) const;
     bool isInside(const Point& p, const Triangle& t) const;
-    void insertPoint2D(Point p);
+    void insertPoint2D(const Point &p);
+    void insertRandPoint2D(int max);
     bool is2D(int indF);
 
-    void drawMesh(bool wireframe = false);
-    void drawMeshLaplacian(bool wireframe = false);
+    void drawMesh();
     void drawMeshWireFrame();
+    void drawMeshLaplacian(bool wireframe = false);
+    void test();
+
+    // vector<Point> points;
+    // vector<Face> faces;
+    // map <arrete>, <face, indice sommet opposé>
+    // map<pair<int, int>, pair<int, int>> topology;
+
+    int currentFace;
+    bool highlightNeighbors;
+
+    void handleFace(int indVertex1, int indVertex2, int indVertex3, int faceIndex);
+    void handleEdge(int indVertex1, int indVertex2, int faceIndex, int opposedVertex);
+    void clearData();
+
+    // complete l'enveloppe convexe avec des edge flip
+    void completeConvexHull(int idFace, int idVert);
+
+    bool isVert2D(int indV);
+    bool isFace2D(int indF);
+
+    int findAdjFace(int idFace, int id2find);
+    int vertIndexInFace(int idFace, int idVert);
+    int infiniteInFace(int idFace);
+
+    // retourne l'id du sommet dans idFace2 opposé à idFace1
+    int opposedVert(int idFace1, int idFace2);
+
+    void checkFaceDelaunay(queue<pair<int, int>>& nonDelaunay, int idFace);
+    void makeDelaunay();
+
+    friend class MainWindow;
 };
 
 class GeometricWorld  //Generally used to create a singleton instance

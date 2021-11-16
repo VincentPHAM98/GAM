@@ -1,13 +1,18 @@
 #include "mesh.h"
 
+#include <time.h>
+
 #include <QDebug>
 #include <QDir>
 #include <QFileDialog>
 #include <QVector3D>
 #include <QtMath>
+#include <fstream>
 #include <iostream>
 #include <set>
 #include <sstream>
+
+using namespace std;
 
 // The following functions could be displaced into a module OpenGLDisplayGeometricWorld that would include mesh.h
 
@@ -41,61 +46,65 @@ float Mesh::area(const Triangle &t) {
     return 0.5 * QVector3D::crossProduct(ab, ac).length();
 }
 
+void Mesh::test() {
+    calculateLaplacian();
+
+    // test circulateur face infinie
+    auto circ = adjacent_vertices(8);
+    auto begin = adjacent_vertices(8);
+    ++circ;
+    for (; circ != begin; ++circ) {
+        std::cout << circ.globalVertexIdx() << std::endl;
+    }
+
+    // test orientation
+    for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
+        std::cout << "idx: " << it.getIdx() << std::endl;
+        std::cout << "orientation: " << orientation2D(*it) << std::endl;
+    }
+
+    // test isInside
+    for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
+        double pX = 0., pY = 0., pZ = 0.;
+        for (int i = 0; i < 3; ++i) {
+            pX += vertices[it->vertices[i]].p._x;
+            pY += vertices[it->vertices[i]].p._y;
+            pZ += vertices[it->vertices[i]].p._z;
+        }
+        std::cout << "is inside: " << isInside(Point(pX / 3., pY / 3., pZ / 3.), *it) << std::endl;
+    }
+
+    // test split
+    int size = triangles.size();
+    for (int i = 0; i < size; ++i) {
+        splitTriangleMiddle(i);
+    }
+    splitTriangleMiddle(0);
+
+    // circulator on faces test
+    // circ = incident_faces(0);
+    // begin = incident_faces(0);
+    // ++circ;
+    // for (; circ != begin; ++circ) {
+    //     std::cout << circ.globalFaceIdx() << std::endl;
+    // }
+}
+
 Mesh::Mesh() {
-    loadOFF("data/2D_mesh_test.off");
+    loadOFF("2D_mesh_test.off");
+
+    srand(time(NULL));
+    currentFace = 0;
+    highlightNeighbors = 0;
+
+    cout << orientation2D(Point(2, 2, 0), Point(1, 1, 0), Point(0, 2, 0)) << endl;
 
     insertPoint2D(Point(2.25, 0.5, 0.));
     //    splitTriangle(8, Point(02.25,0.5,0.));
 
     //    loadOFF("../data/queen.off");
-    //    splitTriangleMiddle(0);
-    //    splitTriangleMiddle(1);
-    //    splitTriangleMiddle(8);
-    //    edgeFlip(0,1);
     //    loadOFF("../data/sphere.off");
     //    loadOFF("../data/cube.off");
-
-    //    calculateLaplacian();
-
-    // test circulateur face infinie
-    //    auto circ = adjacent_vertices(8);
-    //    auto begin = adjacent_vertices(8);
-    //    ++circ;
-    //    for(; circ != begin; ++circ) {
-    //        std::cout << circ.globalVertexIdx() << std::endl;
-    //    }
-
-    // test orientation
-    //    for (auto it = faces_begin(); it != faces_past_the_end(); ++it ) {
-    //        std::cout << "idx: " << it.getIdx() << std::endl;
-    //        std::cout << "orientation: " << orientation2D(*it) << std::endl;
-    //    }
-
-    // test isInside
-    //    for (auto it = faces_begin(); it != faces_past_the_end(); ++it ) {
-    //        double pX = 0., pY = 0., pZ = 0.;
-    //        for (int i = 0; i < 3; ++i) {
-    //            pX += vertices[it->vertices[i]].p._x;
-    //            pY += vertices[it->vertices[i]].p._y;
-    //            pZ += vertices[it->vertices[i]].p._z;
-    //        }
-    //        std::cout << "is inside: " << isInside(Point(pX/3., pY/3., pZ/3.), *it) << std::endl;
-    //    }
-
-    // test split
-    //    int size = triangles.size();
-    //    for (int i = 0; i < size; ++i) {
-    //        splitTriangleMiddle(i);
-    //    }
-    //    splitTriangleMiddle(0);
-
-    // circulator on faces test
-    //    auto circ = incident_faces(0);
-    //    auto begin = incident_faces(0);
-    //    ++circ;
-    //    for(; circ != begin; ++circ) {
-    //        std::cout << circ.globalIdx() << std::endl;
-    //    }
 }
 
 std::pair<int, int> make_ordered_pair(int a, int b) {
@@ -157,6 +166,59 @@ void Mesh::loadOFF(std::string path) {
         std::cout << "Ouverture du fichier impossible." << std::endl;
 }
 
+// Vincent
+// void Mesh::initFile(string filepath) {
+//     clearData();
+//     int nbVertices, nbFaces;
+//     ifstream file;
+//     string line, word1, word2, word3, word4;
+//     stringstream sline;
+
+//     cout << "initiating : " << filepath << endl;
+//     file.open(filepath);
+//     if (file.is_open()) {
+//         cout << "file opened succesfully" << endl;
+//         getline(file, line);
+//         sline = stringstream(line);
+//         // reading number of faces
+//         getline(sline, word1, ' ');
+//         nbVertices = stoi(word1);
+//         // reading number of vertices
+//         getline(sline, word1, ' ');
+//         nbFaces = stoi(word1);
+
+//         // reading vertices coordinates
+//         for (int i = 0; i < nbVertices; i++) {
+//             getline(file, line);
+//             sline = stringstream(line);
+//             getline(sline, word1, ' ');
+//             getline(sline, word2, ' ');
+//             getline(sline, word3, ' ');
+
+//             points.push_back(Point(stof(word1), stof(word2), stof(word3)));
+//         }
+
+//         // creating vertices vector
+//         for (int i = 0; i < points.size(); i++) {
+//             vertices.push_back(Vertex(i, -1));
+//         }
+
+//         // reading description of faces (only triangles)
+//         for (int i = 0; i < nbFaces; i++) {
+//             getline(file, line);
+//             sline = stringstream(line);
+//             getline(sline, word1, ' ');
+//             getline(sline, word2, ' ');
+//             getline(sline, word3, ' ');
+//             getline(sline, word4, ' ');
+//             faces.push_back(Face(stoi(word2), stoi(word3), stoi(word4), -1, -1, -1));
+
+//             handleFace(stoi(word2), stoi(word3), stoi(word4), i);
+//         }
+//     }
+//     cout << "init end" << endl;
+// }
+
 void Mesh::findTopology() {
     std::map<std::pair<int, int>, std::pair<int, int>> topo;  // EDGE -> FACE
 
@@ -177,39 +239,6 @@ void Mesh::findTopology() {
                 triangles[otherFaceIdx].adjacent[pair.first->second.second] = i;
             }
         }
-    }
-}
-
-void Mesh::findTopology(const std::vector<Point> &points, const std::vector<std::array<uint, 3>> &faces) {
-    std::map<std::pair<int, int>, std::pair<int, int>> topo;  // EDGE -> FACE
-    for (const auto &point : points) {
-        Vertex v;
-        v.p = point;
-        v.triangleIdx = -1;
-        vertices.push_back(v);
-    }
-
-    // Parcours de chaque triangle
-    for (std::size_t i = 0; i < faces.size(); ++i) {
-        Triangle t;
-        for (int j = 0; j < 3; ++j) {
-            uint vertexIdx = faces[i][j];
-            if (vertices[vertexIdx].triangleIdx == -1)
-                vertices[vertexIdx].triangleIdx = i;  // Affectation de l'id du triangle courant aux sommets n'étant pas attachés à un triangle
-            t.vertices[j] = vertexIdx;
-            // Créer une paire de sommets avec les id dans l'ordre croissant
-            int next = j < 2 ? j + 1 : 0;
-            uint nextVertexIdx = faces[i][next];
-            int oppositeIdx = findOppositeIdx(j, next);
-            const auto pair = topo.insert({make_ordered_pair(vertexIdx, nextVertexIdx),
-                                           std::make_pair(i, oppositeIdx)});
-            if (pair.second == false) {  // Si l'insertion n'a pas pu être faite dans la map
-                int otherFaceIdx = pair.first->second.first;
-                t.adjacent[oppositeIdx] = otherFaceIdx;
-                triangles[otherFaceIdx].adjacent[pair.first->second.second] = i;
-            }
-        }
-        triangles.push_back(t);
     }
 }
 
@@ -260,13 +289,9 @@ void Mesh::calculateLaplacian() {
     // normalize curvature
     const auto pair = std::minmax_element(curvature.begin(), curvature.end());
     double min = *pair.first;
-    //    std::cout << "min: " << min << std::endl;
     double max = *pair.second;
-    //    std::cout << "max: " << max << std::endl;
     for (double &d : curvature) {
-        //        std::cout << "dBefore: " << d << std::endl;
         d = (d - min) / (max - min);
-        //        std::cout << "dAfter: " << d << std::endl;
     }
 }
 
@@ -318,6 +343,7 @@ uint Mesh::splitTriangleMiddle(int indFace) {
     return splitTriangle(indFace, Point(pX / 3., pY / 3., pZ / 3.));
 }
 
+// Edge flip Miko
 void Mesh::edgeFlip(int indFace1, int indFace2) {
     Triangle &t1 = triangles[indFace1];
     Triangle &t2 = triangles[indFace2];
@@ -380,11 +406,17 @@ bool Mesh::is2D(int indF) {
            vertices[triangles[indF].vertices[2]].p._z == 0.;
 }
 
-void Mesh::insertPoint2D(Point p) {
+void Mesh::insertPoint2D(const Point &p) {
+    cout << "début insertion" << endl;
+    // on commence sur une face aléatoire pas reliée au point infini
     int indF = rand() % triangles.size();
     while (!is2D(indF))
         indF = rand() % triangles.size();
+
+    // marche pour trouver la bonne face
+    int n = 0;
     while (!isInside(p, triangles[indF])) {
+        cout << indF << endl;
         if (orientation2D(vertices[triangles[indF].vertices[0]].p, vertices[triangles[indF].vertices[1]].p, p) < 0.)
             indF = triangles[indF].adjacent[2];
         else if (orientation2D(vertices[triangles[indF].vertices[1]].p, vertices[triangles[indF].vertices[2]].p, p) < 0.)
@@ -392,99 +424,23 @@ void Mesh::insertPoint2D(Point p) {
         else if (orientation2D(vertices[triangles[indF].vertices[2]].p, vertices[triangles[indF].vertices[0]].p, p) < 0.)
             indF = triangles[indF].adjacent[1];
         // si on est hors de l'enveloppe
-        if (!is2D(indF))
+        if (!isFace2D(indF))
             break;
+        if (n++ > triangles.size()) {
+            cout << "Failed to insert point" << endl;
+            return;
+        }
     }
-    int newVertex = splitTriangle(indF, p);
+    cout << "fin marche" << endl;
+    cout << "split" << endl;
+    int indV = splitTriangle(indF, p);
 
     // TO DO finir l'enveloppe convexe si ajout en dehors
-
-    if (!is2D(indF)) {
-        uint infiniteEdge = 8;
-        std::cout << "not is2D!" << std::endl;
-        indF = triangles[indF].adjacent[triangles[indF].getInternalIdx(infiniteEdge)];  // TODO peut causer boucle infinie
-        auto circ = adjacent_vertices(infiniteEdge);
-        // circuler jusqu'a tomber sur le nouveau sommet ajouté
-        while ((++circ).globalVertexIdx() != newVertex)
-            ;
-        uint potentialTriangleToFlipIdx1 = circ.globalFaceIdx();
-        const Triangle &t1 = triangles[potentialTriangleToFlipIdx1];
-        int i1 = t1.getExternalIdx(infiniteEdge, 1);
-        int i2 = t1.getExternalIdx(infiniteEdge, 2);
-        ++circ;
-        uint potentialTriangleToFlipIdx2 = circ.globalFaceIdx();
-        const Triangle &t2 = triangles[potentialTriangleToFlipIdx2];
-        int i3 = t2.getExternalIdx(infiniteEdge, 2);
-        if (orientation2D(i1, i2, i3) > 0) {
-            edgeFlip(potentialTriangleToFlipIdx1, potentialTriangleToFlipIdx2);
-        } else {
-            // break
-        }
-
-        std::cout << "test";
+    if (!isFace2D(indF)) {
+        indF = triangles[indF].adjacent[infiniteInFace(indF)];
+        completeConvexHull(indF, indV);
     }
-
-    //    int newVertexId = vertices.size()-1; // index du vertex ajouté en dehors
-    //    int consideredTriangleIdx = indF;
-
-    //    bool finished = false;
-    //    while (!finished) {
-    //        int nextVert1Idx = triangles[consideredTriangleIdx].getInternalIdx(newVertexId, 1);
-    //        int nextTp1Idx = triangles[consideredTriangleIdx].adjacent[triangles[consideredTriangleIdx].getInternalIdx(newVertexId, 2)];
-    //        int nextTp2Idx = triangles[nextTp1Idx].adjacent[triangles[nextTp1Idx].getInternalIdx(newVertexId)];
-    //        int nextVert2Idx = triangles[nextTp2Idx].vertices[triangles[nextTp2Idx].getInternalIdx(nextVert1Idx, 2)];
-    //        if(orientation2D(newVertexId, nextVert2Idx, nextVert1Idx) > 0.) {
-    //            std::cout << "Edge flip droite" << std::endl;
-    //            edgeFlip(nextTp1Idx, nextTp2Idx);
-    //        }
-    //        else {
-    //            finished = true;
-    //        }
-    //        consideredTriangleIdx = nextTp2Idx;
-    //    }
-
-    //    consideredTriangleIdx = indF;
-    //    finished = false;
-    //    while (!finished) {
-    //        int nextVert1Idx = triangles[consideredTriangleIdx].getInternalIdx(newVertexId, 2);
-    //        int nextTp1Idx = triangles[consideredTriangleIdx].adjacent[triangles[consideredTriangleIdx].getInternalIdx(newVertexId, 1)];
-    //        int nextTp2Idx = triangles[nextTp1Idx].adjacent[triangles[nextTp1Idx].getInternalIdx(newVertexId)];
-    //        int nextVert2Idx = triangles[nextTp2Idx].vertices[triangles[nextTp2Idx].getInternalIdx(nextVert1Idx, 1)];
-    //        if(orientation2D(newVertexId, nextVert1Idx, nextVert2Idx) > 0.) {
-    //            std::cout << "Edge flip gauche" << std::endl;
-    //            edgeFlip(nextTp1Idx, nextTp2Idx);
-    //        }
-    //        else {
-    //            finished = true;
-    //        }
-    //        consideredTriangleIdx = nextTp1Idx;
-    //    }
-}
-
-void Mesh::drawMesh(bool wireframe) {
-    for (const auto &face : triangles) {
-        if (wireframe) {
-            glBegin(GL_LINE_STRIP);
-        } else {
-            glBegin(GL_TRIANGLES);
-        }
-        glColor3d(1, 1, 1);
-        glPointDraw(vertices[face.vertices[0]].p);
-        glPointDraw(vertices[face.vertices[1]].p);
-        glPointDraw(vertices[face.vertices[2]].p);
-        glEnd();
-    }
-
-    //    for (int i = 0; i < triangles.size(); ++i) {
-    //            glBegin(GL_TRIANGLES);
-    //        glColor3d(1,1,1);
-    //        if (i == 8)
-    //            glColor3d(1.,0.,1.);
-    //        glPointDraw(vertices[triangles[i].vertices[0]].p);
-    //        glPointDraw(vertices[triangles[i].vertices[1]].p);
-    //        glPointDraw(vertices[triangles[i].vertices[2]].p);
-    //        glEnd();
-    //    }
+    currentFace = indF;
 }
 
 void Mesh::drawMeshLaplacian(bool wireframe) {
@@ -509,6 +465,256 @@ void Mesh::drawMeshLaplacian(bool wireframe) {
     }
 }
 
+void Mesh::clearData() {
+    vertices.clear();
+    triangles.clear();
+    // points.clear();
+    // faces.clear();
+    // topology.clear();
+}
+
+// void Mesh::splitTriangle(int indFace, int indVertex) {
+//     int nbFace = triangles.size();
+//     // update des voisins
+//     triangles[triangles[indFace].adjacent[0]].adjacent[findAdjFace(triangles[indFace].adjacent[0], indFace)] = nbFace;
+//     triangles[triangles[indFace].adjacent[1]].adjacent[findAdjFace(triangles[indFace].adjacent[1], indFace)] = nbFace + 1;
+
+//     // Creating sub triangles
+//     triangles.push_back(Triangle(triangles[indFace].vertices[1], triangles[indFace].vertices[2], indVertex,
+//                          nbFace + 1, indFace, triangles[indFace].adjacent[0]));
+
+//     triangles.push_back(Triangle(triangles[indFace].vertices[2], triangles[indFace].vertices[0], indVertex,
+//                          indFace, nbFace, triangles[indFace].adjacent[1]));
+
+//     triangles[indFace].vertices[2] = indVertex;
+//     triangles[indFace].adjacent[0] = nbFace;
+//     triangles[indFace].adjacent[1] = nbFace + 1;
+// }
+
+// Edge flip Vincent
+// void Mesh::edgeFlip(int indFace1, int indFace2) {
+//     int sommetF1 = -1, sommetF2, indSommetF1, indSommetF2;
+//     // cherche l'arrête commune et stock des infos pour la suite
+//     for (int i = 0; i < 3; i++) {
+//         if (faces[indFace1].adjFaces[i] == indFace2) {
+//             sommetF1 = faces[indFace1].vertices[i];
+//             indSommetF1 = i;
+//         }
+//         if (faces[indFace2].adjFaces[i] == indFace1) {
+//             sommetF2 = faces[indFace2].vertices[i];
+//             indSommetF2 = i;
+//         }
+//     }
+//     if (sommetF1 == -1) {
+//         cout << "Cannot flip this edge" << endl;
+//         return;
+//     }
+//     // update des sommets pour flipper l'arrête
+//     faces[indFace1].vertices[(indSommetF1 + 2) % 3] = sommetF2;
+//     faces[indFace2].vertices[(indSommetF2 + 2) % 3] = sommetF1;
+
+//     // update de l'adjacence des faces flippés
+//     int temp = faces[indFace1].adjFaces[(indSommetF1 + 1) % 3];
+//     int temp2 = faces[indFace2].adjFaces[(indSommetF2 + 1) % 3];
+//     faces[indFace1].adjFaces[indSommetF1] = temp2;
+//     faces[indFace2].adjFaces[indSommetF2] = temp;
+
+//     faces[indFace1].adjFaces[(indSommetF1 + 1) % 3] = indFace2;
+//     faces[indFace2].adjFaces[(indSommetF2 + 1) % 3] = indFace1;
+
+//     // update de l'adjacence des faces voisines flippés
+//     for (int i = 0; i < 3; i++) {
+//         if (faces[temp].adjFaces[i] == indFace1) {
+//             faces[temp].adjFaces[i] = indFace2;
+//         }
+//         if (faces[temp2].adjFaces[i] == indFace2)
+//             faces[temp2].adjFaces[i] = indFace1;
+//     }
+// }
+
+bool Mesh::isVert2D(int indV) {
+    return vertices[indV].p._z == 0.;
+}
+
+bool Mesh::isFace2D(int indF) {
+    return isVert2D(triangles[indF].vertices[0]) &&
+           isVert2D(triangles[indF].vertices[1]) &&
+           isVert2D(triangles[indF].vertices[2]);
+}
+
+int Mesh::findAdjFace(int idFace, int id2find) {
+    for (int i = 0; i < 3; i++) {
+        if (triangles[idFace].adjacent[i] == id2find)
+            return i;
+    }
+    return -1;
+}
+
+int Mesh::vertIndexInFace(int idFace, int idVert) {
+    for (int i = 0; i < 3; i++) {
+        if (triangles[idFace].vertices[i] == idVert)
+            return i;
+    }
+    return -1;
+}
+
+int Mesh::infiniteInFace(int idFace) {
+    for (int i = 0; i < 3; i++) {
+        if (!isVert2D(triangles[idFace].vertices[i]))
+            return i;
+    }
+    return -1;
+}
+
+void Mesh::completeConvexHull(int idFace, int idVert) {
+    // Complete à droite (sens trigo)
+    int tempFace = idFace;
+    int face2Flip1 = triangles[tempFace].adjacent[(vertIndexInFace(tempFace, idVert) + 2) % 3];
+    int face2Flip2 = triangles[face2Flip1].adjacent[(vertIndexInFace(face2Flip1, idVert))];
+    int idV2 = triangles[face2Flip1].vertices[(infiniteInFace(face2Flip1) + 1) % 3];
+    int idV3 = triangles[face2Flip2].vertices[(infiniteInFace(face2Flip2) + 1) % 3];
+
+    while (orientation2D(idVert, idV2, idV3) < 0.) {
+        edgeFlip(face2Flip1, face2Flip2);
+        tempFace = triangles[tempFace].adjacent[(vertIndexInFace(tempFace, idVert) + 2) % 3];
+        face2Flip1 = triangles[tempFace].adjacent[(vertIndexInFace(tempFace, idVert) + 2) % 3];
+        face2Flip2 = triangles[face2Flip1].adjacent[(vertIndexInFace(face2Flip1, idVert))];
+        idV2 = triangles[face2Flip1].vertices[(infiniteInFace(face2Flip1) + 1) % 3];
+        idV3 = triangles[face2Flip2].vertices[(infiniteInFace(face2Flip2) + 1) % 3];
+    }
+
+    // Complete à gauche (sens non trigo)
+    tempFace = idFace;
+    face2Flip1 = triangles[tempFace].adjacent[(vertIndexInFace(tempFace, idVert) + 1) % 3];
+    face2Flip2 = triangles[face2Flip1].adjacent[(vertIndexInFace(face2Flip1, idVert))];
+    idV2 = triangles[face2Flip1].vertices[(infiniteInFace(face2Flip1) + 2) % 3];
+    idV3 = triangles[face2Flip2].vertices[(infiniteInFace(face2Flip2) + 2) % 3];
+
+    while (orientation2D(idVert, idV2, idV3) > 0.) {
+        edgeFlip(face2Flip1, face2Flip2);
+        tempFace = triangles[tempFace].adjacent[(vertIndexInFace(tempFace, idVert) + 1) % 3];
+        face2Flip1 = triangles[tempFace].adjacent[(vertIndexInFace(tempFace, idVert) + 1) % 3];
+        face2Flip2 = triangles[face2Flip1].adjacent[(vertIndexInFace(face2Flip1, idVert))];
+        idV2 = triangles[face2Flip1].vertices[(infiniteInFace(face2Flip1) + 2) % 3];
+        idV3 = triangles[face2Flip2].vertices[(infiniteInFace(face2Flip2) + 2) % 3];
+    }
+}
+
+void Mesh::insertRandPoint2D(int max) {
+    insertPoint2D(Point(rand() % (2 * max) - max, rand() % (2 * max) - max, 0));
+}
+
+int Mesh::opposedVert(int idFace1, int idFace2) {
+    for (int i = 0; i < 3; i++) {
+        if (triangles[idFace2].adjacent[i] == idFace1)
+            return i;
+    }
+    return -1;
+}
+
+// cherche parmi les voisins de idFace si leurs arrêtes sont Delaunay et les ajoute à la queue
+void Mesh::checkFaceDelaunay(queue<pair<int, int>> &nonDelaunay, int idFace) {
+    cout << idFace << endl;
+    for (int j = 0; j < 3; j++) {
+        int idAdjacent = triangles[idFace].adjacent[j];
+        // ne regarde que des nouvelles arrête pas dans une face infinie
+        if (idAdjacent > idFace && isFace2D(idAdjacent)) {
+            float determinant;
+            Vertex a, b, c, d;
+            a = vertices[triangles[idFace].vertices[0]];
+            b = vertices[triangles[idFace].vertices[1]];
+            c = vertices[triangles[idFace].vertices[2]];
+            d = vertices[triangles[idAdjacent].vertices[opposedVert(idFace, idAdjacent)]];
+
+            determinant = a.p._x - d.p._x * b.p._y - d.p._y * (c.p._x * c.p._x - d.p._x * d.p._x) + (c.p._y * c.p._y - d.p._y * d.p._y) +
+                          b.p._x - d.p._x * c.p._y - d.p._y * (a.p._x * a.p._x - d.p._x * d.p._x) + (a.p._y * a.p._y - d.p._y * d.p._y) +
+                          c.p._x - d.p._x * a.p._y - d.p._y * (b.p._x * b.p._x - d.p._x * d.p._x) + (b.p._y * b.p._y - d.p._y * d.p._y) -
+                          c.p._x - d.p._x * b.p._y - d.p._y * (a.p._x * a.p._x - d.p._x * d.p._x) + (a.p._y * a.p._y - d.p._y * d.p._y) -
+                          b.p._x - d.p._x * a.p._y - d.p._y * (c.p._x * c.p._x - d.p._x * d.p._x) + (c.p._y * c.p._y - d.p._y * d.p._y) -
+                          a.p._x - d.p._x * c.p._y - d.p._y * (b.p._x * b.p._x - d.p._x * d.p._x) + (b.p._y * b.p._y - d.p._y * d.p._y);
+
+            cout << "determinant : " << determinant << endl;
+            // si non delaunay localement, on ajoute à la queue
+            if (determinant > 0.) {
+                nonDelaunay.push({idFace, idAdjacent});
+            }
+        }
+    }
+}
+
+void Mesh::makeDelaunay() {
+    cout << "début delaunay" << endl;
+    // triangles adjacents non delaunay / arrêtes non delaunay
+    queue<pair<int, int>> nonDelaunay;
+
+    // on cherche les arrêtes non delaunay
+    for (int i = 0; i < triangles.size(); i++) {
+        checkFaceDelaunay(nonDelaunay, i);
+    }
+
+    // flip des arrêtes qu'on a trouvé
+    while (!nonDelaunay.empty()) {
+        edgeFlip(nonDelaunay.front().first, nonDelaunay.front().second);
+        nonDelaunay.pop();
+    }
+
+    cout << "fin delaunay" << endl;
+}
+
+void Mesh::drawMesh() {
+    if (!triangles.empty()) {
+        glColor3d(1, 0, 0);
+        glBegin(GL_TRIANGLES);
+        glPointDraw(vertices[triangles[currentFace].vertices[0]].p);
+        glPointDraw(vertices[triangles[currentFace].vertices[1]].p);
+        glPointDraw(vertices[triangles[currentFace].vertices[2]].p);
+        glEnd();
+
+        if (highlightNeighbors) {
+            for (int i = 0; i < 3; i++) {
+                int idNeighbor = triangles[currentFace].adjacent[i];
+                glColor3d(0, 0, 1);
+                glBegin(GL_TRIANGLES);
+
+                glPointDraw(vertices[triangles[idNeighbor].vertices[0]].p);
+                glPointDraw(vertices[triangles[idNeighbor].vertices[1]].p);
+                glPointDraw(vertices[triangles[idNeighbor].vertices[2]].p);
+                glEnd();
+            }
+        }
+
+        glColor3d(1, 1, 1);
+        for (const auto &face : triangles) {
+            glBegin(GL_TRIANGLES);
+            glPointDraw(vertices[face.vertices[0]].p);
+            glPointDraw(vertices[face.vertices[1]].p);
+            glPointDraw(vertices[face.vertices[2]].p);
+            glEnd();
+        }
+    }
+}
+
+void Mesh::drawMeshWireFrame() {
+    glColor3d(1, 1, 1);
+
+    for (const auto &face : triangles) {
+        glBegin(GL_LINE_STRIP);
+        glPointDraw(vertices[face.vertices[0]].p);
+        glPointDraw(vertices[face.vertices[1]].p);
+        glEnd();
+
+        glBegin(GL_LINE_STRIP);
+        glPointDraw(vertices[face.vertices[0]].p);
+        glPointDraw(vertices[face.vertices[2]].p);
+        glEnd();
+
+        glBegin(GL_LINE_STRIP);
+        glPointDraw(vertices[face.vertices[1]].p);
+        glPointDraw(vertices[face.vertices[2]].p);
+        glEnd();
+    }
+}
+
 GeometricWorld::GeometricWorld() {
     double width = 0.5, depth = 0.6, height = 0.8;
     _bBox.push_back(Point(-0.5 * width, -0.5 * depth, -0.5 * height));  //0
@@ -517,29 +723,16 @@ GeometricWorld::GeometricWorld() {
     _bBox.push_back(Point(-0.5 * width, -0.5 * depth, 0.5 * height));   // 3
 }
 
+// The following functions could be displaced into a module OpenGLDisplayGeometricWorld that would include mesh.h
+
 //Example with a bBox
 void GeometricWorld::draw() {
-    _mesh.drawMesh(true);
-    //    _mesh.drawMesh(false);
+    _mesh.drawMesh();
 }
 
 //Example with a wireframe bBox
 void GeometricWorld::drawWireFrame() {
-    glColor3d(0, 1, 0);
-    glBegin(GL_LINE_STRIP);
-    glPointDraw(_bBox[0]);
-    glPointDraw(_bBox[1]);
-    glEnd();
-    glColor3d(0, 0, 1);
-    glBegin(GL_LINE_STRIP);
-    glPointDraw(_bBox[0]);
-    glPointDraw(_bBox[2]);
-    glEnd();
-    glColor3d(1, 0, 0);
-    glBegin(GL_LINE_STRIP);
-    glPointDraw(_bBox[0]);
-    glPointDraw(_bBox[3]);
-    glEnd();
+    _mesh.drawMeshWireFrame();
 }
 
 QVector3D Point::operator-(const Point &p) {

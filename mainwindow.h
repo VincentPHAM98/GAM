@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <iostream>
+using namespace std;
 
 namespace Ui {
 class MainWindow;
@@ -15,9 +17,27 @@ class MainWindow : public QMainWindow {
     ~MainWindow();
 
    private slots:
-    void on_fileSelectBtn_clicked();
+    void on_pushButton_3_released();
 
-   private:
+    void on_pushButton_2_released();
+
+    void on_initButton_released();
+
+    void on_splitCenterButton_released();
+
+    void on_selectFaceButton_released();
+
+    void on_highlightNeighborsBox_stateChanged(int arg1);
+
+    void on_edgeFlipButton_released();
+
+    void on_addPointButton_released();
+
+    void on_DelaunayButton_released();
+
+    // void on_DelaunayButton_clicked();
+
+private:
     Ui::MainWindow *ui;
 };
 
