@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <queue>
+#include <math.h>
 
 using namespace std;
 
@@ -18,6 +19,24 @@ public:
 
     Point():_x(),_y(),_z() {}
     Point(float x_, float y_, float z_):_x(x_),_y(y_),_z(z_) {}
+
+    Point cross(Point u, Point v);
+    float dot(Point u, Point v);
+    Point normalize(Point u);
+
+    Point& operator + (const Point p){
+        _x += p._x;
+        _y += p._y;
+        _z += p._z;
+        return *this;
+    }
+
+    Point& operator - (const Point p){
+        _x -= p._x;
+        _y -= p._y;
+        _z -= p._z;
+        return *this;
+    }
 };
 
 class Vertex{
@@ -48,6 +67,16 @@ public:
         adjFaces[0] = _f1;
         adjFaces[1] = _f2;
         adjFaces[2] = _f3;
+    }
+
+    Face(const Face& _f){
+        vertices[0] = _f.vertices[0];
+        vertices[1] = _f.vertices[1];
+        vertices[2] = _f.vertices[2];
+
+        adjFaces[0] = _f.adjFaces[0];
+        adjFaces[1] = _f.adjFaces[1];
+        adjFaces[2] = _f.adjFaces[2];
     }
 };
 
@@ -86,22 +115,27 @@ public:
     void splitTriangleAtCenter(int idFace);
 
     void edgeFlip(int indFace1, int indFace2);
+
     double orientation2D(Point p1, Point p2, Point p3);
     double orientation2D(int v1, int v2, int v3);
+    Point getNormal(Point a, Point b, Point c);
+    Point getNormal(Face f);
+    Point getNormal(int idFace);
+
     bool isInside(Point p, Face f);
+    bool isVert2D(int indV);
+    bool isFace2D(int indF);
+    bool isInCirconscrit(int idFace, Point p);
 
     void insertPoint2D(Point p);
     void insertRandPoint2D(int max);
+
     // complete l'enveloppe convexe avec des edge flip
     void completeConvexHull(int idFace, int idVert);
-
-    bool isVert2D(int indV);
-    bool isFace2D(int indF);
 
     int findAdjFace(int idFace, int id2find);
     int vertIndexInFace(int idFace, int idVert);
     int infiniteInFace(int idFace);
-
     // retourne l'id du sommet dans idFace2 opposé à idFace1
     int opposedVert(int idFace1, int idFace2);
 
