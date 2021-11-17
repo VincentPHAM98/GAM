@@ -66,9 +66,6 @@ class Point {
     friend std::ostream& operator<<(std::ostream& os, const Point& p);
 };
 
-class Triangle;
-
-//** TP : TO MODIFY
 class Vertex {
    public:
     Vertex() : p() {}
@@ -96,6 +93,9 @@ class Triangle {
     //    ~Triangle();
     // Gives internal index of given vertex index
     int getInternalIdx(size_t vertexIdx, int shift = 0) const;
+
+    int getAdjacentFaceFromGlobalVertex(int vertexIdx) const;
+    uint& getVertexFromAdjacentFace(uint faceIdx);
 };
 
 class Mesh {
@@ -315,7 +315,7 @@ class Mesh {
     bool isVert2D(int indV);
     bool isFace2D(int indF);
 
-    std::pair<uint, uint> findFacesWithCommonEdge(uint idVert1, uint idVert2);
+    std::pair<int, int> findFacesWithCommonEdge(uint idVert1, uint idVert2);
     int collapseEdge(uint idVert1, uint idVert2);
 
     void drawMesh();

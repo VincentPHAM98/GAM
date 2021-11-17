@@ -43,6 +43,17 @@ int Triangle::getInternalIdx(size_t vertexIdx, int shift) const {
         return -1;
 }
 
+int Triangle::getAdjacentFaceFromGlobalVertex(int vertexIdx) const {
+    return adjacent[getInternalIdx(vertexIdx)];
+}
+
+uint &Triangle::getVertexFromAdjacentFace(uint faceIdx) {
+    int i;
+    for (i = 0; i < 3; ++i)
+        if (adjacent[i] == faceIdx)
+            return adjacent[i];
+}
+
 float Mesh::area(const Triangle &t) {
     QVector3D ab = vertices[t.vertices[1]].p - vertices[t.vertices[0]].p;
     QVector3D ac = vertices[t.vertices[2]].p - vertices[t.vertices[0]].p;
@@ -111,7 +122,7 @@ Point Point::normalize(Point u) {
 }
 
 Mesh::Mesh() {
-    loadOFF("data/2D_mesh_test.off");
+    loadOFF("data/test.off");
 
     srand(time(NULL));
     currentFace = 0;
@@ -747,29 +758,58 @@ void Mesh::makeDelaunay() {
     cout << "fin delaunay" << endl;
 }
 
-std::pair<uint, uint> Mesh::findFacesWithCommonEdge(uint idVert1, uint idVert2) {
-    std::vector<int> faces(2);
+std::pair<int, int> Mesh::findFacesWithCommonEdge(uint idVert1, uint idVert2) {
+    std::vector<int> faces;
     auto cof = incident_faces(idVert1);
     auto begin = cof;
     do {
-        if (cof->getInternalIdx(idVert2) != -1) {
+        if (cof->getInternalIdx(idVert2) != -1)
             faces.push_back(cof.globalIdx());
-        }
         ++cof;
     } while (cof != begin);
-    return std::make_pair(faces[0], faces[1]);
+
+    return std::make_pair<int, int>((int)faces[0], (int)faces[1]);
 }
 
+// idVert1 a garder et déplacer et idVert2 à supprimer
 int Mesh::collapseEdge(uint idVert1, uint idVert2) {
-    // idVert1 a garder et déplacer et idVert2 à supprimer
     // Deplacer le premier sommet au milieu des 2
     Point middle = (vertices[idVert1].p + vertices[idVert2].p) / 2;
-    std::cout << "v1: " << vertices[idVert1].p << "\tv2: " << vertices[idVert2].p << "\tmiddle: " << middle << std::endl;
+    // std::cout << "v1: " << vertices[idVert1].p << "v2: " << vertices[idVert2].p << "middle: " << middle << std::endl;
     vertices[idVert1].p = middle;
-    std::cout << "after: " << vertices[idVert1].p << std::endl;
+    // std::cout << "after: " << vertices[idVert1].p << std::endl;
+
     // Trouver les 2 faces qui vont etre supprimées
     auto faces = findFacesWithCommonEdge(idVert1, idVert2);
     std::cout << "Face1 to be deleted: " << faces.first << "\tFace2: " << faces.second << std::endl;
+    //      Mettre en ordre l'adjacence des faces adjacentes aux faces a supprimer
+    int adjTriangle1Idx, adjTriangle2Idx;
+    //          Adjacence face 1:
+    adjTriangle1Idx = triangles[faces.first].getAdjacentFaceFromGlobalVertex(idVert1);
+    adjTriangle2Idx = triangles[faces.first].getAdjacentFaceFromGlobalVertex(idVert2);
+    triangles[adjTriangle1Idx].getVertexFromAdjacentFace(faces.first) = adjTriangle2Idx;
+    triangles[adjTriangle2Idx].getVertexFromAdjacentFace(faces.first) = adjTriangle1Idx;
+    //          Adjacence face 2:
+    adjTriangle1Idx = triangles[faces.second].getAdjacentFaceFromGlobalVertex(idVert1);
+    adjTriangle2Idx = triangles[faces.second].getAdjacentFaceFromGlobalVertex(idVert2);
+    triangles[adjTriangle1Idx].getVertexFromAdjacentFace(faces.second) = adjTriangle2Idx;
+    triangles[adjTriangle2Idx].getVertexFromAdjacentFace(faces.second) = adjTriangle1Idx;
+
+    // Trouver les faces qui vont perdre leur sommet et arranger leur sommet
+    auto cof = incident_faces(idVert2);
+    auto begin = cof;
+    // std::vector<int> patchUp;
+    do {
+        if (cof.globalIdx() != faces.first && cof.globalIdx() != faces.second) {
+            // patchUp.push_back(cof.globalIdx());
+            cof->vertices[cof->getInternalIdx(idVert2)] = idVert1;
+        }
+    } while (cof != begin);
+
+    // Supprimer l'arrete et les 2 faces
+    triangles.erase(triangles.begin() + faces.first);
+    triangles.erase(triangles.begin() + faces.second);
+    vertices.erase(vertices.begin() + idVert2);
 }
 
 void Mesh::drawMesh() {
