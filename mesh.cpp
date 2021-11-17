@@ -184,57 +184,57 @@ void Mesh::loadOFF(std::string path) {
 }
 
 // Vincent
-void Mesh::initFile(string filepath) {
-    clearData();
-    int nbVertices, nbFaces;
-    ifstream file;
-    string line, word1, word2, word3, word4;
-    stringstream sline;
+// void Mesh::initFile(string filepath) {
+//     clearData();
+//     int nbVertices, nbFaces;
+//     ifstream file;
+//     string line, word1, word2, word3, word4;
+//     stringstream sline;
 
-    cout << "initiating : " << filepath << endl;
-    file.open(filepath);
-    if (file.is_open()) {
-        cout << "file opened succesfully" << endl;
-        getline(file, line);
-        sline = stringstream(line);
-        // reading number of faces
-        getline(sline, word1, ' ');
-        nbVertices = stoi(word1);
-        // reading number of vertices
-        getline(sline, word1, ' ');
-        nbFaces = stoi(word1);
+//     cout << "initiating : " << filepath << endl;
+//     file.open(filepath);
+//     if (file.is_open()) {
+//         cout << "file opened succesfully" << endl;
+//         getline(file, line);
+//         sline = stringstream(line);
+//         // reading number of faces
+//         getline(sline, word1, ' ');
+//         nbVertices = stoi(word1);
+//         // reading number of vertices
+//         getline(sline, word1, ' ');
+//         nbFaces = stoi(word1);
 
-        // reading vertices coordinates
-        for (int i = 0; i < nbVertices; i++) {
-            getline(file, line);
-            sline = stringstream(line);
-            getline(sline, word1, ' ');
-            getline(sline, word2, ' ');
-            getline(sline, word3, ' ');
+//         // reading vertices coordinates
+//         for (int i = 0; i < nbVertices; i++) {
+//             getline(file, line);
+//             sline = stringstream(line);
+//             getline(sline, word1, ' ');
+//             getline(sline, word2, ' ');
+//             getline(sline, word3, ' ');
 
-            vertices.push_back(Point(stof(word1), stof(word2), stof(word3)));
-        }
+//             vertices.push_back(Point(stof(word1), stof(word2), stof(word3)));
+//         }
 
-        // creating vertices vector
-        // for (int i = 0; i < points.size(); i++) {
-        //     vertices.push_back(Vertex(i, -1));
-        // }
+//         // creating vertices vector
+//         // for (int i = 0; i < points.size(); i++) {
+//         //     vertices.push_back(Vertex(i, -1));
+//         // }
 
-        // reading description of faces (only triangles)
-        for (int i = 0; i < nbFaces; i++) {
-            getline(file, line);
-            sline = stringstream(line);
-            getline(sline, word1, ' ');
-            getline(sline, word2, ' ');
-            getline(sline, word3, ' ');
-            getline(sline, word4, ' ');
-            triangles.push_back(Triangle(stoi(word2), stoi(word3), stoi(word4), -1, -1, -1));
+//         // reading description of faces (only triangles)
+//         for (int i = 0; i < nbFaces; i++) {
+//             getline(file, line);
+//             sline = stringstream(line);
+//             getline(sline, word1, ' ');
+//             getline(sline, word2, ' ');
+//             getline(sline, word3, ' ');
+//             getline(sline, word4, ' ');
+//             triangles.push_back(Triangle(stoi(word2), stoi(word3), stoi(word4), -1, -1, -1));
 
-            handleFace(stoi(word2), stoi(word3), stoi(word4), i);
-        }
-    }
-    cout << "init end" << endl;
-}
+//             handleFace(stoi(word2), stoi(word3), stoi(word4), i);
+//         }
+//     }
+//     cout << "init end" << endl;
+// }
 
 void Mesh::findTopology() {
     std::map<std::pair<int, int>, std::pair<int, int>> topo;  // EDGE -> FACE
