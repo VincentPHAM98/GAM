@@ -35,9 +35,11 @@ class MainWindow : public QMainWindow {
 
     void on_DelaunayButton_released();
 
-    // void on_DelaunayButton_clicked();
+    void on_collapseEdgeButton_released();
 
-private:
+    void on_collapseVertice1_valueChanged(int arg1);
+
+   private:
     Ui::MainWindow *ui;
 };
 

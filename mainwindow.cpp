@@ -53,3 +53,19 @@ void MainWindow::on_addPointButton_released() {
 void MainWindow::on_DelaunayButton_released() {
     ui->widget->_geomWorld._mesh.makeDelaunay();
 }
+
+void MainWindow::on_collapseEdgeButton_released()
+{
+    uint vertex1 = ui->collapseVertice1->value();
+    uint vertex2 = ui->collapseVertice2->value();
+    ui->widget->_geomWorld._mesh.collapseEdge((uint)vertex1, (uint)vertex2);
+
+}
+
+void MainWindow::on_collapseVertice1_valueChanged(int arg1)
+{
+    if (arg1 == ui->collapseVertice2->value()) {
+        ui->collapseVertice2->setValue(arg1 + 1);
+    }
+
+}

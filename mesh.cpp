@@ -744,6 +744,20 @@ void Mesh::makeDelaunay() {
     cout << "fin delaunay" << endl;
 }
 
+std::pair<uint, uint> Mesh::findFacesWithCommonEdge(uint idVert1, uint idVert2) {
+}
+
+int Mesh::collapseEdge(uint idVert1, uint idVert2) {
+    // idVert1 a garder et déplacer et idVert2 à supprimer
+    // Deplacer le premier sommet au milieu des 2
+    Point middle = (vertices[idVert1].p + vertices[idVert2].p) / 2;
+    std::cout << "v1: " << vertices[idVert1].p << "\tv2: " << vertices[idVert2].p
+              << "\tmiddle: " << middle << std::endl;
+    vertices[idVert1].p = middle;
+    std::cout << "after: " << vertices[idVert2].p << std::endl;
+    // Trouver les 2 faces qui vont etre supprimées
+}
+
 void Mesh::drawMesh() {
     if (!triangles.empty()) {
         glColor3d(1, 0, 0);

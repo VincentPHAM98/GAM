@@ -14,7 +14,6 @@
 
 using namespace std;
 
-// TO MODIFY
 class Point {
    public:
     double _x;
@@ -22,28 +21,49 @@ class Point {
     double _z;
 
     Point() : _x(), _y(), _z() {}
+    Point(const Point& p) : _x(p._x), _y(p._y), _z(p._z) {}
+    Point& operator=(const Point &p){
+        _x = p._x;
+        _y = p._y;
+        _z = p._z;
+        return *this;
+    }
     Point(float x_, float y_, float z_) : _x(x_), _y(y_), _z(z_) {}
     Point(const QVector3D& v) : _x(v.x()), _y(v.y()), _z(v.z()) {}
-    QVector3D operator-(const Point& p);
-    friend std::ostream& operator<<(std::ostream& os, const Point& p);
 
     Point cross(Point u, Point v);
     float dot(Point u, Point v);
     Point normalize(Point u);
 
-    Point& operator+(const Point p) {
+    Point& operator+=(const Point &p) {
         _x += p._x;
         _y += p._y;
         _z += p._z;
         return *this;
     }
 
+    Point operator+(const Point &p) {
+        double x = _x + p._x;
+        double y = _y + p._y;
+        double z = _z + p._z;
+        return Point(x, y, z);
+    }
+
+    Point operator/(int i) {
+        double x = _x / i;
+        double y = _y / i;
+        double z = _z / i;
+        return Point(x, y, z);
+    }
+
+    QVector3D operator-(const Point& p);
     // Point& operator - (const Point p){
     //     _x -= p._x;
     //     _y -= p._y;
     //     _z -= p._z;
     //     return *this;
     // }
+    friend std::ostream& operator<<(std::ostream& os, const Point& p);
 };
 
 class Triangle;
@@ -86,6 +106,7 @@ class Mesh {
     std::vector<double> curvature;
 
    public:
+    using Edge = std::pair<uint, uint>;
     Mesh();
     //~Mesh();
     struct Iterator_on_vertices {
@@ -295,6 +316,9 @@ class Mesh {
     bool is2D(int indF);
     bool isVert2D(int indV);
     bool isFace2D(int indF);
+
+    std::pair<uint, uint> findFacesWithCommonEdge(uint idVert1, uint idVert2);
+    int collapseEdge(uint idVert1, uint idVert2);
 
     void drawMesh();
     void drawMeshWireFrame();
