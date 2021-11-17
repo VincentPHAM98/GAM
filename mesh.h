@@ -22,7 +22,7 @@ class Point {
 
     Point() : _x(), _y(), _z() {}
     Point(const Point& p) : _x(p._x), _y(p._y), _z(p._z) {}
-    Point& operator=(const Point &p){
+    Point& operator=(const Point& p) {
         _x = p._x;
         _y = p._y;
         _z = p._z;
@@ -35,14 +35,14 @@ class Point {
     float dot(Point u, Point v);
     Point normalize(Point u);
 
-    Point& operator+=(const Point &p) {
+    Point& operator+=(const Point& p) {
         _x += p._x;
         _y += p._y;
         _z += p._z;
         return *this;
     }
 
-    Point operator+(const Point &p) {
+    Point operator+(const Point& p) {
         double x = _x + p._x;
         double y = _y + p._y;
         double z = _z + p._z;
@@ -95,8 +95,7 @@ class Triangle {
     Triangle(std::array<uint, 3> _vertices, std::array<uint, 3> _adjacent) : vertices(_vertices), adjacent(_adjacent) {}
     //    ~Triangle();
     // Gives internal index of given vertex index
-    size_t getInternalIdx(size_t vertexIdx, int shift = 0) const;
-    size_t getExternalIdx(size_t vertexIdx, int shift = 0) const;
+    int getInternalIdx(size_t vertexIdx, int shift = 0) const;
 };
 
 class Mesh {
@@ -106,7 +105,6 @@ class Mesh {
     std::vector<double> curvature;
 
    public:
-    using Edge = std::pair<uint, uint>;
     Mesh();
     //~Mesh();
     struct Iterator_on_vertices {

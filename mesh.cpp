@@ -28,16 +28,19 @@ void glPointDraw(const Point &p) {
 
 Triangle::Triangle() {}
 
-size_t Triangle::getInternalIdx(size_t vertexIdx, int shift) const {
-    size_t i;
+// returns -1 if not present, internal vertex Id otherwise
+int Triangle::getInternalIdx(size_t vertexIdx, int shift) const {
+    bool found = false;
+    int i;
     for (i = 0; i < 3; ++i)
-        if (vertices[i] == vertexIdx)
+        if (vertices[i] == vertexIdx) {
+            found = true;
             break;
-    return (i + shift) % 3;
-}
-
-size_t Triangle::getExternalIdx(size_t vertexIdx, int shift) const {
-    return vertices[getInternalIdx(vertexIdx, shift)];
+        }
+    if (found)
+        return (i + shift) % 3;
+    else
+        return -1;
 }
 
 float Mesh::area(const Triangle &t) {
@@ -745,17 +748,28 @@ void Mesh::makeDelaunay() {
 }
 
 std::pair<uint, uint> Mesh::findFacesWithCommonEdge(uint idVert1, uint idVert2) {
+    std::vector<int> faces(2);
+    auto cof = incident_faces(idVert1);
+    auto begin = cof;
+    do {
+        if (cof->getInternalIdx(idVert2) != -1) {
+            faces.push_back(cof.globalIdx());
+        }
+        ++cof;
+    } while (cof != begin);
+    return std::make_pair(faces[0], faces[1]);
 }
 
 int Mesh::collapseEdge(uint idVert1, uint idVert2) {
     // idVert1 a garder et déplacer et idVert2 à supprimer
     // Deplacer le premier sommet au milieu des 2
     Point middle = (vertices[idVert1].p + vertices[idVert2].p) / 2;
-    std::cout << "v1: " << vertices[idVert1].p << "\tv2: " << vertices[idVert2].p
-              << "\tmiddle: " << middle << std::endl;
+    std::cout << "v1: " << vertices[idVert1].p << "\tv2: " << vertices[idVert2].p << "\tmiddle: " << middle << std::endl;
     vertices[idVert1].p = middle;
-    std::cout << "after: " << vertices[idVert2].p << std::endl;
+    std::cout << "after: " << vertices[idVert1].p << std::endl;
     // Trouver les 2 faces qui vont etre supprimées
+    auto faces = findFacesWithCommonEdge(idVert1, idVert2);
+    std::cout << "Face1 to be deleted: " << faces.first << "\tFace2: " << faces.second << std::endl;
 }
 
 void Mesh::drawMesh() {
