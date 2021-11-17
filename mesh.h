@@ -1,8 +1,11 @@
 #ifndef MESH_H
 #define MESH_H
 
+#include <math.h>
+
 #include <QDebug>
 #include <QGLWidget>
+#include <QVector3D>
 #include <fstream>
 #include <iterator>
 #include <queue>
@@ -20,8 +23,27 @@ class Point {
 
     Point() : _x(), _y(), _z() {}
     Point(float x_, float y_, float z_) : _x(x_), _y(y_), _z(z_) {}
+    Point(const QVector3D& v) : _x(v.x()), _y(v.y()), _z(v.z()) {}
     QVector3D operator-(const Point& p);
     friend std::ostream& operator<<(std::ostream& os, const Point& p);
+
+    Point cross(Point u, Point v);
+    float dot(Point u, Point v);
+    Point normalize(Point u);
+
+    Point& operator+(const Point p) {
+        _x += p._x;
+        _y += p._y;
+        _z += p._z;
+        return *this;
+    }
+
+    // Point& operator - (const Point p){
+    //     _x -= p._x;
+    //     _y -= p._y;
+    //     _z -= p._z;
+    //     return *this;
+    // }
 };
 
 class Triangle;
@@ -55,28 +77,6 @@ class Triangle {
     // Gives internal index of given vertex index
     size_t getInternalIdx(size_t vertexIdx, int shift = 0) const;
     size_t getExternalIdx(size_t vertexIdx, int shift = 0) const;
-};
-
-class Face {
-   public:
-    int vertices[3];
-    int adjFaces[3];
-
-    Face(int _v1, int _v2, int _v3) {
-        vertices[0] = _v1;
-        vertices[1] = _v2;
-        vertices[2] = _v3;
-    }
-
-    Face(int _v1, int _v2, int _v3, int _f1, int _f2, int _f3) {
-        vertices[0] = _v1;
-        vertices[1] = _v2;
-        vertices[2] = _v3;
-
-        adjFaces[0] = _f1;
-        adjFaces[1] = _f2;
-        adjFaces[2] = _f3;
-    }
 };
 
 class Mesh {
@@ -279,7 +279,6 @@ class Mesh {
     void findTopology();
     void calculateLaplacian();
 
-
     void splitTriangle(int indFace, int indVertex);
     uint splitTriangle(uint indFace, const Point& p);
     uint splitTriangleMiddle(int indFace);
@@ -287,10 +286,15 @@ class Mesh {
     float orientation2D(Point p1, Point p2, Point p3) const;
     float orientation2D(int i1, int i2, int i3) const;
     float orientation2D(const Triangle& t) const;
+    Point getNormal(Point a, Point b, Point c);
+    Point getNormal(Triangle f);
+    Point getNormal(int idFace);
     bool isInside(const Point& p, const Triangle& t) const;
-    void insertPoint2D(const Point &p);
+    void insertPoint2D(const Point& p);
     void insertRandPoint2D(int max);
     bool is2D(int indF);
+    bool isVert2D(int indV);
+    bool isFace2D(int indF);
 
     void drawMesh();
     void drawMeshWireFrame();
@@ -309,16 +313,14 @@ class Mesh {
     void handleEdge(int indVertex1, int indVertex2, int faceIndex, int opposedVertex);
     void clearData();
 
+    bool isInCirconscrit(int idFace, Point p);
+
     // complete l'enveloppe convexe avec des edge flip
     void completeConvexHull(int idFace, int idVert);
-
-    bool isVert2D(int indV);
-    bool isFace2D(int indF);
 
     int findAdjFace(int idFace, int id2find);
     int vertIndexInFace(int idFace, int idVert);
     int infiniteInFace(int idFace);
-
     // retourne l'id du sommet dans idFace2 opposé à idFace1
     int opposedVert(int idFace1, int idFace2);
 

@@ -90,8 +90,25 @@ void Mesh::test() {
     // }
 }
 
+Point Point::cross(Point u, Point v) {
+    Point p;
+    p._x = u._y * v._z - u._z * v._y;
+    p._y = u._z * v._x - u._x * v._z;
+    p._z = u._x * v._y - u._y * v._x;
+    return p;
+}
+
+float Point::dot(Point u, Point v) {
+    return u._x * v._x + u._y * v._y + u._z * v._z;
+}
+
+Point Point::normalize(Point u) {
+    float d = sqrt(u._x * u._x + u._y * u._y + u._z * u._z);
+    return Point(u._x / d, u._y / d, u._z / d);
+}
+
 Mesh::Mesh() {
-    loadOFF("2D_mesh_test.off");
+    loadOFF("data/2D_mesh_test.off");
 
     srand(time(NULL));
     currentFace = 0;
@@ -167,57 +184,57 @@ void Mesh::loadOFF(std::string path) {
 }
 
 // Vincent
-// void Mesh::initFile(string filepath) {
-//     clearData();
-//     int nbVertices, nbFaces;
-//     ifstream file;
-//     string line, word1, word2, word3, word4;
-//     stringstream sline;
+void Mesh::initFile(string filepath) {
+    clearData();
+    int nbVertices, nbFaces;
+    ifstream file;
+    string line, word1, word2, word3, word4;
+    stringstream sline;
 
-//     cout << "initiating : " << filepath << endl;
-//     file.open(filepath);
-//     if (file.is_open()) {
-//         cout << "file opened succesfully" << endl;
-//         getline(file, line);
-//         sline = stringstream(line);
-//         // reading number of faces
-//         getline(sline, word1, ' ');
-//         nbVertices = stoi(word1);
-//         // reading number of vertices
-//         getline(sline, word1, ' ');
-//         nbFaces = stoi(word1);
+    cout << "initiating : " << filepath << endl;
+    file.open(filepath);
+    if (file.is_open()) {
+        cout << "file opened succesfully" << endl;
+        getline(file, line);
+        sline = stringstream(line);
+        // reading number of faces
+        getline(sline, word1, ' ');
+        nbVertices = stoi(word1);
+        // reading number of vertices
+        getline(sline, word1, ' ');
+        nbFaces = stoi(word1);
 
-//         // reading vertices coordinates
-//         for (int i = 0; i < nbVertices; i++) {
-//             getline(file, line);
-//             sline = stringstream(line);
-//             getline(sline, word1, ' ');
-//             getline(sline, word2, ' ');
-//             getline(sline, word3, ' ');
+        // reading vertices coordinates
+        for (int i = 0; i < nbVertices; i++) {
+            getline(file, line);
+            sline = stringstream(line);
+            getline(sline, word1, ' ');
+            getline(sline, word2, ' ');
+            getline(sline, word3, ' ');
 
-//             points.push_back(Point(stof(word1), stof(word2), stof(word3)));
-//         }
+            vertices.push_back(Point(stof(word1), stof(word2), stof(word3)));
+        }
 
-//         // creating vertices vector
-//         for (int i = 0; i < points.size(); i++) {
-//             vertices.push_back(Vertex(i, -1));
-//         }
+        // creating vertices vector
+        // for (int i = 0; i < points.size(); i++) {
+        //     vertices.push_back(Vertex(i, -1));
+        // }
 
-//         // reading description of faces (only triangles)
-//         for (int i = 0; i < nbFaces; i++) {
-//             getline(file, line);
-//             sline = stringstream(line);
-//             getline(sline, word1, ' ');
-//             getline(sline, word2, ' ');
-//             getline(sline, word3, ' ');
-//             getline(sline, word4, ' ');
-//             faces.push_back(Face(stoi(word2), stoi(word3), stoi(word4), -1, -1, -1));
+        // reading description of faces (only triangles)
+        for (int i = 0; i < nbFaces; i++) {
+            getline(file, line);
+            sline = stringstream(line);
+            getline(sline, word1, ' ');
+            getline(sline, word2, ' ');
+            getline(sline, word3, ' ');
+            getline(sline, word4, ' ');
+            triangles.push_back(Triangle(stoi(word2), stoi(word3), stoi(word4), -1, -1, -1));
 
-//             handleFace(stoi(word2), stoi(word3), stoi(word4), i);
-//         }
-//     }
-//     cout << "init end" << endl;
-// }
+            handleFace(stoi(word2), stoi(word3), stoi(word4), i);
+        }
+    }
+    cout << "init end" << endl;
+}
 
 void Mesh::findTopology() {
     std::map<std::pair<int, int>, std::pair<int, int>> topo;  // EDGE -> FACE
@@ -295,6 +312,42 @@ void Mesh::calculateLaplacian() {
     }
 }
 
+// void Mesh::splitTriangle(int indFace, int indVertex){
+//     int nbFace = faces.size();
+//     // update des voisins
+//     faces[faces[indFace].adjFaces[0]].adjFaces[findAdjFace(faces[indFace].adjFaces[0], indFace)] = nbFace;
+//     faces[faces[indFace].adjFaces[1]].adjFaces[findAdjFace(faces[indFace].adjFaces[1], indFace)] = nbFace + 1;
+
+//     // Creation des sous triangles
+//     faces.push_back(Face(faces[indFace].vertices[1], faces[indFace].vertices[2], indVertex,
+//             nbFace + 1, indFace, faces[indFace].adjFaces[0]));
+//     if(sommetF1 == -1){
+//         cout << "Impossible de flip" << endl;
+//         return;
+//     }
+//     // update des sommets pour flipper l'arrête
+//     faces[indFace1].vertices[(indSommetF1+2) % 3] = sommetF2;
+//     faces[indFace2].vertices[(indSommetF2+2) % 3] = sommetF1;
+
+//     // update de l'adjacence des faces flippés
+//     int temp = faces[indFace1].adjFaces[(indSommetF1+1) % 3];
+//     int temp2 = faces[indFace2].adjFaces[(indSommetF2+1) % 3];
+//     faces[indFace1].adjFaces[indSommetF1] = temp2;
+//     faces[indFace2].adjFaces[indSommetF2] = temp;
+
+//     faces[indFace1].adjFaces[(indSommetF1+1) % 3] = indFace2;
+//     faces[indFace2].adjFaces[(indSommetF2+1) % 3] = indFace1;
+
+//     // update de l'adjacence des faces voisines flippés
+//     for(int i = 0; i < 3; i++){
+//         if (faces[temp].adjFaces[i] == indFace1){
+//             faces[temp].adjFaces[i] = indFace2;
+//         }
+//         if (faces[temp2].adjFaces[i] == indFace2)
+//             faces[temp2].adjFaces[i] = indFace1;
+//     }
+// }
+
 // retourne l'id du nouveau sommet
 uint Mesh::splitTriangle(uint indFace, const Point &newVertexPos) {
     Triangle *t = &triangles[indFace];  // current working face
@@ -344,35 +397,79 @@ uint Mesh::splitTriangleMiddle(int indFace) {
 }
 
 // Edge flip Miko
+// void Mesh::edgeFlip(int indFace1, int indFace2) {
+//     Triangle &t1 = triangles[indFace1];
+//     Triangle &t2 = triangles[indFace2];
+//     // Step 1: finding common edge indices
+//     int i;
+//     for (i = 0; true; ++i) {
+//         if (t1.adjacent[i] == indFace2)
+//             break;
+//         if (i > 2) {
+//             // throw std::exception();
+//             std::cout << "Impossible de flip" << std::endl;
+//             return;
+//         }
+//     }
+//     std::pair<int, int> edge = {t1.vertices[(i + 1) % 3], t1.vertices[(i + 2) % 3]};
+//     // Step 2: updating adjacent faces' topology
+//     // Only 2 to modify
+//     int t1AdjIdx = t1.adjacent[t1.getInternalIdx(edge.second)];
+//     int t2AdjIdx = t2.adjacent[t2.getInternalIdx(edge.first)];
+//     Triangle &t1Adj = triangles[t1AdjIdx];
+//     Triangle &t2Adj = triangles[t2AdjIdx];
+//     t1Adj.adjacent[t1Adj.getInternalIdx(edge.first, 2)] = indFace2;
+//     t2Adj.adjacent[t2Adj.getInternalIdx(edge.second, 2)] = indFace1;
+
+//     // Step 3: Modifying faces' edges and topology
+//     t1.adjacent[t1.getInternalIdx(edge.second)] = indFace2;
+//     t1.adjacent[t1.getInternalIdx(edge.second, 1)] = t2AdjIdx;
+//     t2.adjacent[t2.getInternalIdx(edge.first)] = indFace1;
+//     t2.adjacent[t2.getInternalIdx(edge.first, 1)] = t1AdjIdx;
+
+//     t1.vertices[t1.getInternalIdx(edge.first)] = t2.vertices[t2.getInternalIdx(edge.first, 1)];
+//     t2.vertices[t2.getInternalIdx(edge.second)] = t1.vertices[t1.getInternalIdx(edge.second, 1)];
+// }
+
+// vincent
 void Mesh::edgeFlip(int indFace1, int indFace2) {
-    Triangle &t1 = triangles[indFace1];
-    Triangle &t2 = triangles[indFace2];
-    // Step 1: finding common edge indices
-    int i;
-    for (i = 0; true; ++i) {
-        if (t1.adjacent[i] == indFace2)
-            break;
-        if (i > 2)
-            throw std::exception();
+    int sommetF1 = -1, sommetF2, indSommetF1, indSommetF2;
+    // cherche l'arrête commune et stock des infos pour la suite
+    for (int i = 0; i < 3; i++) {
+        if (triangles[indFace1].adjacent[i] == indFace2) {
+            sommetF1 = triangles[indFace1].vertices[i];
+            indSommetF1 = i;
+        }
+        if (triangles[indFace2].adjacent[i] == indFace1) {
+            sommetF2 = triangles[indFace2].vertices[i];
+            indSommetF2 = i;
+        }
     }
-    std::pair<int, int> edge = {t1.vertices[(i + 1) % 3], t1.vertices[(i + 2) % 3]};
-    // Step 2: updating adjacent faces' topology
-    // Only 2 to modify
-    int t1AdjIdx = t1.adjacent[t1.getInternalIdx(edge.second)];
-    int t2AdjIdx = t2.adjacent[t2.getInternalIdx(edge.first)];
-    Triangle &t1Adj = triangles[t1AdjIdx];
-    Triangle &t2Adj = triangles[t2AdjIdx];
-    t1Adj.adjacent[t1Adj.getInternalIdx(edge.first, 2)] = indFace2;
-    t2Adj.adjacent[t2Adj.getInternalIdx(edge.second, 2)] = indFace1;
+    if (sommetF1 == -1) {
+        cout << "Impossible de flip" << endl;
+        return;
+    }
+    // update des sommets pour flipper l'arrête
+    triangles[indFace1].vertices[(indSommetF1 + 2) % 3] = sommetF2;
+    triangles[indFace2].vertices[(indSommetF2 + 2) % 3] = sommetF1;
 
-    // Step 3: Modifying faces' edges and topology
-    t1.adjacent[t1.getInternalIdx(edge.second)] = indFace2;
-    t1.adjacent[t1.getInternalIdx(edge.second, 1)] = t2AdjIdx;
-    t2.adjacent[t2.getInternalIdx(edge.first)] = indFace1;
-    t2.adjacent[t2.getInternalIdx(edge.first, 1)] = t1AdjIdx;
+    // update de l'adjacence des faces flippés
+    int temp = triangles[indFace1].adjacent[(indSommetF1 + 1) % 3];
+    int temp2 = triangles[indFace2].adjacent[(indSommetF2 + 1) % 3];
+    triangles[indFace1].adjacent[indSommetF1] = temp2;
+    triangles[indFace2].adjacent[indSommetF2] = temp;
 
-    t1.vertices[t1.getInternalIdx(edge.first)] = t2.vertices[t2.getInternalIdx(edge.first, 1)];
-    t2.vertices[t2.getInternalIdx(edge.second)] = t1.vertices[t1.getInternalIdx(edge.second, 1)];
+    triangles[indFace1].adjacent[(indSommetF1 + 1) % 3] = indFace2;
+    triangles[indFace2].adjacent[(indSommetF2 + 1) % 3] = indFace1;
+
+    // update de l'adjacence des faces voisines flippés
+    for (int i = 0; i < 3; i++) {
+        if (triangles[temp].adjacent[i] == indFace1) {
+            triangles[temp].adjacent[i] = indFace2;
+        }
+        if (triangles[temp2].adjacent[i] == indFace2)
+            triangles[temp2].adjacent[i] = indFace1;
+    }
 }
 
 float Mesh::orientation2D(Point p1, Point p2, Point p3) const {
@@ -473,65 +570,6 @@ void Mesh::clearData() {
     // topology.clear();
 }
 
-// void Mesh::splitTriangle(int indFace, int indVertex) {
-//     int nbFace = triangles.size();
-//     // update des voisins
-//     triangles[triangles[indFace].adjacent[0]].adjacent[findAdjFace(triangles[indFace].adjacent[0], indFace)] = nbFace;
-//     triangles[triangles[indFace].adjacent[1]].adjacent[findAdjFace(triangles[indFace].adjacent[1], indFace)] = nbFace + 1;
-
-//     // Creating sub triangles
-//     triangles.push_back(Triangle(triangles[indFace].vertices[1], triangles[indFace].vertices[2], indVertex,
-//                          nbFace + 1, indFace, triangles[indFace].adjacent[0]));
-
-//     triangles.push_back(Triangle(triangles[indFace].vertices[2], triangles[indFace].vertices[0], indVertex,
-//                          indFace, nbFace, triangles[indFace].adjacent[1]));
-
-//     triangles[indFace].vertices[2] = indVertex;
-//     triangles[indFace].adjacent[0] = nbFace;
-//     triangles[indFace].adjacent[1] = nbFace + 1;
-// }
-
-// Edge flip Vincent
-// void Mesh::edgeFlip(int indFace1, int indFace2) {
-//     int sommetF1 = -1, sommetF2, indSommetF1, indSommetF2;
-//     // cherche l'arrête commune et stock des infos pour la suite
-//     for (int i = 0; i < 3; i++) {
-//         if (faces[indFace1].adjFaces[i] == indFace2) {
-//             sommetF1 = faces[indFace1].vertices[i];
-//             indSommetF1 = i;
-//         }
-//         if (faces[indFace2].adjFaces[i] == indFace1) {
-//             sommetF2 = faces[indFace2].vertices[i];
-//             indSommetF2 = i;
-//         }
-//     }
-//     if (sommetF1 == -1) {
-//         cout << "Cannot flip this edge" << endl;
-//         return;
-//     }
-//     // update des sommets pour flipper l'arrête
-//     faces[indFace1].vertices[(indSommetF1 + 2) % 3] = sommetF2;
-//     faces[indFace2].vertices[(indSommetF2 + 2) % 3] = sommetF1;
-
-//     // update de l'adjacence des faces flippés
-//     int temp = faces[indFace1].adjFaces[(indSommetF1 + 1) % 3];
-//     int temp2 = faces[indFace2].adjFaces[(indSommetF2 + 1) % 3];
-//     faces[indFace1].adjFaces[indSommetF1] = temp2;
-//     faces[indFace2].adjFaces[indSommetF2] = temp;
-
-//     faces[indFace1].adjFaces[(indSommetF1 + 1) % 3] = indFace2;
-//     faces[indFace2].adjFaces[(indSommetF2 + 1) % 3] = indFace1;
-
-//     // update de l'adjacence des faces voisines flippés
-//     for (int i = 0; i < 3; i++) {
-//         if (faces[temp].adjFaces[i] == indFace1) {
-//             faces[temp].adjFaces[i] = indFace2;
-//         }
-//         if (faces[temp2].adjFaces[i] == indFace2)
-//             faces[temp2].adjFaces[i] = indFace1;
-//     }
-// }
-
 bool Mesh::isVert2D(int indV) {
     return vertices[indV].p._z == 0.;
 }
@@ -612,6 +650,45 @@ int Mesh::opposedVert(int idFace1, int idFace2) {
     return -1;
 }
 
+Point Mesh::getNormal(Point a, Point b, Point c) {
+    auto u = b - a;
+    auto v = c - a;
+    u.normalize();
+    v.normalize();
+
+    auto normale = QVector3D::crossProduct(u, v);
+    return Point(normale.x(), normale.y(), normale.z());
+}
+
+Point Mesh::getNormal(Triangle f) {
+    Point a, b, c;
+    a = vertices[f.vertices[0]].p;
+    b = vertices[f.vertices[1]].p;
+    c = vertices[f.vertices[2]].p;
+
+    return getNormal(a, b, c);
+}
+
+Point Mesh::getNormal(int idFace) {
+    return getNormal(triangles[idFace]);
+}
+
+bool Mesh::isInCirconscrit(int idF, Point p) {
+    Point _p[3];  // points de la face idF projetés dans le paraboloïde
+    for (int i = 0; i < 3; i++) {
+        _p[i]._x = vertices[triangles[idF].vertices[i]].p._x;
+        _p[i]._y = vertices[triangles[idF].vertices[i]].p._y;
+        _p[i]._z = _p[i]._x * _p[i]._x + _p[i]._y * _p[i]._y;
+    }
+
+    Point pTemp = Point(p._x, p._y, p._x * p._x + p._y * p._y);  // point p projeté dans le paraboloïde
+
+    Point normale = getNormal(_p[0], _p[1], _p[2]);
+    Point pa = Point(_p[0] - pTemp);
+
+    return p.dot(normale, pa) > 0;
+}
+
 // cherche parmi les voisins de idFace si leurs arrêtes sont Delaunay et les ajoute à la queue
 void Mesh::checkFaceDelaunay(queue<pair<int, int>> &nonDelaunay, int idFace) {
     cout << idFace << endl;
@@ -626,16 +703,16 @@ void Mesh::checkFaceDelaunay(queue<pair<int, int>> &nonDelaunay, int idFace) {
             c = vertices[triangles[idFace].vertices[2]];
             d = vertices[triangles[idAdjacent].vertices[opposedVert(idFace, idAdjacent)]];
 
-            determinant = a.p._x - d.p._x * b.p._y - d.p._y * (c.p._x * c.p._x - d.p._x * d.p._x) + (c.p._y * c.p._y - d.p._y * d.p._y) +
-                          b.p._x - d.p._x * c.p._y - d.p._y * (a.p._x * a.p._x - d.p._x * d.p._x) + (a.p._y * a.p._y - d.p._y * d.p._y) +
-                          c.p._x - d.p._x * a.p._y - d.p._y * (b.p._x * b.p._x - d.p._x * d.p._x) + (b.p._y * b.p._y - d.p._y * d.p._y) -
-                          c.p._x - d.p._x * b.p._y - d.p._y * (a.p._x * a.p._x - d.p._x * d.p._x) + (a.p._y * a.p._y - d.p._y * d.p._y) -
-                          b.p._x - d.p._x * a.p._y - d.p._y * (c.p._x * c.p._x - d.p._x * d.p._x) + (c.p._y * c.p._y - d.p._y * d.p._y) -
-                          a.p._x - d.p._x * c.p._y - d.p._y * (b.p._x * b.p._x - d.p._x * d.p._x) + (b.p._y * b.p._y - d.p._y * d.p._y);
+            // determinant = a.p._x - d.p._x * b.p._y - d.p._y * (c.p._x * c.p._x - d.p._x * d.p._x) + (c.p._y * c.p._y - d.p._y * d.p._y) +
+            //               b.p._x - d.p._x * c.p._y - d.p._y * (a.p._x * a.p._x - d.p._x * d.p._x) + (a.p._y * a.p._y - d.p._y * d.p._y) +
+            //               c.p._x - d.p._x * a.p._y - d.p._y * (b.p._x * b.p._x - d.p._x * d.p._x) + (b.p._y * b.p._y - d.p._y * d.p._y) -
+            //               c.p._x - d.p._x * b.p._y - d.p._y * (a.p._x * a.p._x - d.p._x * d.p._x) + (a.p._y * a.p._y - d.p._y * d.p._y) -
+            //               b.p._x - d.p._x * a.p._y - d.p._y * (c.p._x * c.p._x - d.p._x * d.p._x) + (c.p._y * c.p._y - d.p._y * d.p._y) -
+            //               a.p._x - d.p._x * c.p._y - d.p._y * (b.p._x * b.p._x - d.p._x * d.p._x) + (b.p._y * b.p._y - d.p._y * d.p._y);
 
-            cout << "determinant : " << determinant << endl;
+            //            cout << "determinant : " << determinant << endl;
             // si non delaunay localement, on ajoute à la queue
-            if (determinant > 0.) {
+            if (isInCirconscrit(idFace, d.p)) {
                 nonDelaunay.push({idFace, idAdjacent});
             }
         }
@@ -651,13 +728,19 @@ void Mesh::makeDelaunay() {
     for (int i = 0; i < triangles.size(); i++) {
         checkFaceDelaunay(nonDelaunay, i);
     }
-
-    // flip des arrêtes qu'on a trouvé
+    // tant que la triangulation n'est pas de Delaunay
     while (!nonDelaunay.empty()) {
-        edgeFlip(nonDelaunay.front().first, nonDelaunay.front().second);
-        nonDelaunay.pop();
+        // flip des arrêtes qu'on a trouvé
+        while (!nonDelaunay.empty()) {
+            edgeFlip(nonDelaunay.front().first, nonDelaunay.front().second);
+            nonDelaunay.pop();
+        }
+        std::cout << "ICI1" << std::endl;
+        // on re verifie s'il en reste encore
+        for (int i = 0; i < triangles.size(); i++) {
+            checkFaceDelaunay(nonDelaunay, i);
+        }
     }
-
     cout << "fin delaunay" << endl;
 }
 

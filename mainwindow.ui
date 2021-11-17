@@ -20,222 +20,130 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <widget class="GLDisplayWidget" name="widget" native="true">
-    <property name="geometry">
-     <rect>
-      <x>377</x>
-      <y>9</y>
-      <width>361</width>
-      <height>493</height>
-     </rect>
-    </property>
-    <widget class="QLabel" name="label">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>470</y>
-       <width>91</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Triangle count:</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="nbTriangleLabel">
-     <property name="geometry">
-      <rect>
-       <x>100</x>
-       <y>470</y>
-       <width>58</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QPushButton" name="selectFaceButton">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>70</y>
-      <width>80</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Select Face :</string>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="highlightNeighborsBox">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>100</y>
-      <width>141</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Highlight neighbors</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="edgeFlipButton">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>160</y>
-      <width>111</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Flip edges :</string>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="flipFace1">
-    <property name="geometry">
-     <rect>
-      <x>130</x>
-      <y>160</y>
-      <width>61</width>
-      <height>25</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="flipFace2">
-    <property name="geometry">
-     <rect>
-      <x>210</x>
-      <y>160</y>
-      <width>61</width>
-      <height>25</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_3">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>40</y>
-      <width>177</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Swap Plain Face / WireFrame</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="addPointButton">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>250</y>
-      <width>81</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Add 2D Point</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_2">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>290</y>
-      <width>135</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Add random 2D point</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>480</y>
-      <width>80</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>exit</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="initButton">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>80</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Init off file</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="splitCenterButton">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>130</y>
-      <width>166</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Split current face at center</string>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="faceSelectBox">
-    <property name="geometry">
-     <rect>
-      <x>100</x>
-      <y>70</y>
-      <width>81</width>
-      <height>25</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="xBox">
-    <property name="geometry">
-     <rect>
-      <x>100</x>
-      <y>250</y>
-      <width>61</width>
-      <height>24</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="yBox">
-    <property name="geometry">
-     <rect>
-      <x>170</x>
-      <y>250</y>
-      <width>61</width>
-      <height>24</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="DelaunayButton">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>330</y>
-      <width>101</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Make Delaunay</string>
-    </property>
-   </widget>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QPushButton" name="initButton">
+        <property name="text">
+         <string>Init off file</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="4">
+       <widget class="QPushButton" name="pushButton_3">
+        <property name="text">
+         <string>Swap Plain Face / WireFrame</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="3" colspan="2">
+       <widget class="QLineEdit" name="yBox"/>
+      </item>
+      <item row="2" column="1" colspan="3">
+       <widget class="QSpinBox" name="faceSelectBox"/>
+      </item>
+      <item row="3" column="0" colspan="3">
+       <widget class="QCheckBox" name="highlightNeighborsBox">
+        <property name="text">
+         <string>Highlight neighbors</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1" colspan="2">
+       <widget class="QLineEdit" name="xBox"/>
+      </item>
+      <item row="4" column="0" colspan="4">
+       <widget class="QPushButton" name="splitCenterButton">
+        <property name="text">
+         <string>Split current face at center</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0" colspan="3">
+       <widget class="QPushButton" name="pushButton_2">
+        <property name="text">
+         <string>Add random 2D point</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0" colspan="2">
+       <widget class="QPushButton" name="DelaunayButton">
+        <property name="text">
+         <string>Make Delaunay</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QPushButton" name="addPointButton">
+        <property name="text">
+         <string>Add 2D Point</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0">
+       <widget class="QPushButton" name="pushButton">
+        <property name="text">
+         <string>exit</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QPushButton" name="selectFaceButton">
+        <property name="text">
+         <string>Select Face :</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="4">
+       <widget class="QSpinBox" name="flipFace2"/>
+      </item>
+      <item row="5" column="2" colspan="2">
+       <widget class="QSpinBox" name="flipFace1"/>
+      </item>
+      <item row="5" column="0" colspan="2">
+       <widget class="QPushButton" name="edgeFlipButton">
+        <property name="text">
+         <string>Flip edges :</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="GLDisplayWidget" name="widget" native="true">
+      <property name="mouseTracking">
+       <bool>false</bool>
+      </property>
+      <widget class="QLabel" name="label">
+       <property name="geometry">
+        <rect>
+         <x>200</x>
+         <y>0</y>
+         <width>91</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Triangle count:</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="nbTriangleLabel">
+       <property name="geometry">
+        <rect>
+         <x>300</x>
+         <y>0</y>
+         <width>58</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
