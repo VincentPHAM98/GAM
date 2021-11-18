@@ -16,8 +16,7 @@ void MainWindow::on_pushButton_3_released() {
 }
 
 void MainWindow::on_pushButton_2_released() {
-    cout << "inserting point" << endl;
-    ui->widget->_geomWorld._mesh.insertRandPoint2D(5);
+    ui->widget->_geomWorld._mesh.insertRandPoint2D(10);
 }
 
 void MainWindow::on_initButton_released() {

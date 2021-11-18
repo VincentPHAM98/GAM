@@ -458,6 +458,7 @@ void Mesh::edgeFlip(int indFace1, int indFace2) {
         if (triangles[temp2].adjacent[i] == indFace2)
             triangles[temp2].adjacent[i] = indFace1;
     }
+    cout << "flip" << endl;
 }
 
 float Mesh::orientation2D(Point p1, Point p2, Point p3) const {
@@ -493,7 +494,6 @@ bool Mesh::is2D(int indF) {
 
 void Mesh::insertPoint2D(const Point &p) {
     srand(time(NULL));
-    cout << "début insertion" << endl;
     // on commence sur une face aléatoire pas reliée au point infini
     int indF = rand() % triangles.size();
     while (!is2D(indF))
@@ -502,7 +502,6 @@ void Mesh::insertPoint2D(const Point &p) {
     // marche pour trouver la bonne face
     int n = 0;
     while (!isInside(p, triangles[indF])) {
-        cout << indF << endl;
         if (orientation2D(vertices[triangles[indF].vertices[0]].p, vertices[triangles[indF].vertices[1]].p, p) < 0.)
             indF = triangles[indF].adjacent[2];
         else if (orientation2D(vertices[triangles[indF].vertices[1]].p, vertices[triangles[indF].vertices[2]].p, p) < 0.)
@@ -513,12 +512,11 @@ void Mesh::insertPoint2D(const Point &p) {
         if (!isFace2D(indF))
             break;
         if (n++ > triangles.size()) {
-            cout << "Failed to insert point" << endl;
+            cout << "Impossible d'insérer" << endl;
             return;
         }
     }
-    cout << "fin marche" << endl;
-    cout << "split" << endl;
+    cout << "point inséré" << endl;
     int indV = splitTriangle(indF, p);
 
     // TO DO finir l'enveloppe convexe si ajout en dehors
@@ -676,24 +674,21 @@ bool Mesh::isInCirconscrit(int idF, Point p) {
     Point normale = getNormal(_p[0], _p[1], _p[2]);
     Point pa = Point(_p[0] - pTemp);
 
-    return p.dot(normale, pa) > 0;
+    return p.dot(normale, pa) < 0;
 }
 
 // cherche parmi les voisins de idFace si leurs arrêtes sont Delaunay et les ajoute à la queue
 void Mesh::checkFaceDelaunay(queue<pair<int, int>> &nonDelaunay, int idFace) {
-    cout << idFace << endl;
     for (int j = 0; j < 3; j++) {
         int idAdjacent = triangles[idFace].adjacent[j];
         // ne regarde que des nouvelles arrête pas dans une face infinie
-        if (idAdjacent > idFace && isFace2D(idAdjacent)) {
-            Vertex a, b, c, d;
-            a = vertices[triangles[idFace].vertices[0]];
-            b = vertices[triangles[idFace].vertices[1]];
-            c = vertices[triangles[idFace].vertices[2]];
-            d = vertices[triangles[idAdjacent].vertices[opposedVert(idFace, idAdjacent)]];
-
+        if (idAdjacent > idFace && isFace2D(idFace) && isFace2D(idAdjacent)) {
+            cout << idFace << endl;
+            Vertex d = vertices[triangles[idAdjacent].vertices[opposedVert(idFace, idAdjacent)]];
+            cout << triangles[idAdjacent].vertices[opposedVert(idFace, idAdjacent)] << endl;
             // si non delaunay localement, on ajoute à la queue
             if (isInCirconscrit(idFace, d.p)) {
+                cout << "circonscrit" << endl;
                 nonDelaunay.push({idFace, idAdjacent});
             }
         }
@@ -713,6 +708,7 @@ void Mesh::makeDelaunay() {
     while (!nonDelaunay.empty()) {
         // flip des arrêtes qu'on a trouvé
         while (!nonDelaunay.empty()) {
+            cout << nonDelaunay.front().first << " " << nonDelaunay.front().second << " ";
             edgeFlip(nonDelaunay.front().first, nonDelaunay.front().second);
             nonDelaunay.pop();
         }
