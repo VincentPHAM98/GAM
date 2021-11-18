@@ -108,20 +108,8 @@ Point Point::normalize(Point u) {
 }
 
 Mesh::Mesh() {
-    loadOFF("data/2D_mesh_test.off");
-
-    srand(time(NULL));
     currentFace = 0;
     highlightNeighbors = 0;
-
-    cout << orientation2D(Point(2, 2, 0), Point(1, 1, 0), Point(0, 2, 0)) << endl;
-
-    insertPoint2D(Point(2.25, 0.5, 0.));
-    //    splitTriangle(8, Point(02.25,0.5,0.));
-
-    //    loadOFF("../data/queen.off");
-    //    loadOFF("../data/sphere.off");
-    //    loadOFF("../data/cube.off");
 }
 
 std::pair<int, int> make_ordered_pair(int a, int b) {
@@ -504,6 +492,7 @@ bool Mesh::is2D(int indF) {
 }
 
 void Mesh::insertPoint2D(const Point &p) {
+    srand(time(NULL));
     cout << "début insertion" << endl;
     // on commence sur une face aléatoire pas reliée au point infini
     int indF = rand() % triangles.size();
@@ -639,6 +628,7 @@ void Mesh::completeConvexHull(int idFace, int idVert) {
 }
 
 void Mesh::insertRandPoint2D(int max) {
+    srand(time(NULL));
     insertPoint2D(Point(rand() % (2 * max) - max, rand() % (2 * max) - max, 0));
 }
 
@@ -696,21 +686,12 @@ void Mesh::checkFaceDelaunay(queue<pair<int, int>> &nonDelaunay, int idFace) {
         int idAdjacent = triangles[idFace].adjacent[j];
         // ne regarde que des nouvelles arrête pas dans une face infinie
         if (idAdjacent > idFace && isFace2D(idAdjacent)) {
-            float determinant;
             Vertex a, b, c, d;
             a = vertices[triangles[idFace].vertices[0]];
             b = vertices[triangles[idFace].vertices[1]];
             c = vertices[triangles[idFace].vertices[2]];
             d = vertices[triangles[idAdjacent].vertices[opposedVert(idFace, idAdjacent)]];
 
-            // determinant = a.p._x - d.p._x * b.p._y - d.p._y * (c.p._x * c.p._x - d.p._x * d.p._x) + (c.p._y * c.p._y - d.p._y * d.p._y) +
-            //               b.p._x - d.p._x * c.p._y - d.p._y * (a.p._x * a.p._x - d.p._x * d.p._x) + (a.p._y * a.p._y - d.p._y * d.p._y) +
-            //               c.p._x - d.p._x * a.p._y - d.p._y * (b.p._x * b.p._x - d.p._x * d.p._x) + (b.p._y * b.p._y - d.p._y * d.p._y) -
-            //               c.p._x - d.p._x * b.p._y - d.p._y * (a.p._x * a.p._x - d.p._x * d.p._x) + (a.p._y * a.p._y - d.p._y * d.p._y) -
-            //               b.p._x - d.p._x * a.p._y - d.p._y * (c.p._x * c.p._x - d.p._x * d.p._x) + (c.p._y * c.p._y - d.p._y * d.p._y) -
-            //               a.p._x - d.p._x * c.p._y - d.p._y * (b.p._x * b.p._x - d.p._x * d.p._x) + (b.p._y * b.p._y - d.p._y * d.p._y);
-
-            //            cout << "determinant : " << determinant << endl;
             // si non delaunay localement, on ajoute à la queue
             if (isInCirconscrit(idFace, d.p)) {
                 nonDelaunay.push({idFace, idAdjacent});
