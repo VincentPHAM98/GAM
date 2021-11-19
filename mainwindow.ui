@@ -23,24 +23,85 @@
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="3" column="0" colspan="3">
-       <widget class="QCheckBox" name="highlightNeighborsBox">
+      <item row="0" column="0" colspan="2">
+       <widget class="QPushButton" name="initButton">
         <property name="text">
-         <string>Highlight neighbors</string>
+         <string>Init off file</string>
         </property>
        </widget>
       </item>
-      <item row="10" column="0">
+      <item row="5" column="3">
+       <widget class="QSpinBox" name="flipFace2"/>
+      </item>
+      <item row="2" column="2">
+       <widget class="QSpinBox" name="faceSelectBox"/>
+      </item>
+      <item row="3" column="2" colspan="3">
+       <widget class="QCheckBox" name="incrementalDelaunayBox">
+        <property name="text">
+         <string>Incremental Delaunay</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="3" colspan="2">
+       <widget class="QLineEdit" name="yBox"/>
+      </item>
+      <item row="5" column="0" colspan="2">
+       <widget class="QPushButton" name="edgeFlipButton">
+        <property name="text">
+         <string>Flip edges :</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0" colspan="5">
        <widget class="QPushButton" name="pushButton">
         <property name="text">
          <string>exit</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QPushButton" name="initButton">
+      <item row="2" column="0" colspan="2">
+       <widget class="QPushButton" name="selectFaceButton">
         <property name="text">
-         <string>Init off file</string>
+         <string>Select Face :</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QSpinBox" name="flipFace1"/>
+      </item>
+      <item row="3" column="0" colspan="2">
+       <widget class="QCheckBox" name="highlightNeighborsBox">
+        <property name="text">
+         <string>Highlight neighbors</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0" colspan="2">
+       <widget class="QPushButton" name="DelaunayButton">
+        <property name="text">
+         <string>Make Delaunay</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="2">
+       <widget class="QPushButton" name="splitCenterButton">
+        <property name="text">
+         <string>Split current face at center</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0" colspan="2">
+       <widget class="QPushButton" name="pushButton_2">
+        <property name="text">
+         <string>Add random 2D point</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QPushButton" name="pushButton_3">
+        <property name="text">
+         <string>Swap Plain Face / WireFrame</string>
         </property>
        </widget>
       </item>
@@ -51,60 +112,16 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="4">
-       <widget class="QSpinBox" name="flipFace2"/>
-      </item>
-      <item row="5" column="0" colspan="2">
-       <widget class="QPushButton" name="edgeFlipButton">
-        <property name="text">
-         <string>Flip edges :</string>
-        </property>
-       </widget>
-      </item>
       <item row="6" column="1" colspan="2">
-       <widget class="QLineEdit" name="xBox"/>
-      </item>
-      <item row="7" column="0" colspan="3">
-       <widget class="QPushButton" name="pushButton_2">
-        <property name="text">
-         <string>Add random 2D point</string>
+       <widget class="QLineEdit" name="xBox">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;x&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
-       </widget>
-      </item>
-      <item row="5" column="2" colspan="2">
-       <widget class="QSpinBox" name="flipFace1"/>
-      </item>
-      <item row="6" column="3" colspan="2">
-       <widget class="QLineEdit" name="yBox"/>
-      </item>
-      <item row="4" column="0" colspan="4">
-       <widget class="QPushButton" name="splitCenterButton">
-        <property name="text">
-         <string>Split current face at center</string>
+        <property name="whatsThis">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QPushButton" name="selectFaceButton">
         <property name="text">
-         <string>Select Face :</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1" colspan="3">
-       <widget class="QSpinBox" name="faceSelectBox"/>
-      </item>
-      <item row="1" column="0" colspan="4">
-       <widget class="QPushButton" name="pushButton_3">
-        <property name="text">
-         <string>Swap Plain Face / WireFrame</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0" colspan="2">
-       <widget class="QPushButton" name="DelaunayButton">
-        <property name="text">
-         <string>Make Delaunay</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -148,32 +165,6 @@
       <property name="mouseTracking">
        <bool>false</bool>
       </property>
-      <widget class="QLabel" name="label">
-       <property name="geometry">
-        <rect>
-         <x>200</x>
-         <y>0</y>
-         <width>91</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Triangle count:</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="nbTriangleLabel">
-       <property name="geometry">
-        <rect>
-         <x>300</x>
-         <y>0</y>
-         <width>58</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
      </widget>
     </item>
    </layout>
@@ -205,8 +196,8 @@
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>113</x>
-     <y>505</y>
+     <x>183</x>
+     <y>499</y>
     </hint>
     <hint type="destinationlabel">
      <x>177</x>
@@ -216,3 +207,4 @@
   </connection>
  </connections>
 </ui>
+
