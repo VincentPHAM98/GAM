@@ -17,7 +17,7 @@ using namespace std;
 // The following functions could be displaced into a module OpenGLDisplayGeometricWorld that would include mesh.h
 
 std::ostream &operator<<(std::ostream &os, const Point &p) {
-    os << "Point(" << p._x << "," << p._y << "," << p._z << ")\n";
+    os << "Point(" << p._x << "," << p._y << "," << p._z << ") ";
     return os;
 }
 
@@ -94,14 +94,6 @@ void Mesh::test() {
         splitTriangleMiddle(i, 0);
     }
     splitTriangleMiddle(0, 0);
-
-    // circulator on faces test
-    // circ = incident_faces(0);
-    // begin = incident_faces(0);
-    // ++circ;
-    // for (; circ != begin; ++circ) {
-    //     std::cout << circ.globalFaceIdx() << std::endl;
-    // }
 }
 
 Point Point::cross(Point u, Point v) {
@@ -185,59 +177,6 @@ void Mesh::loadOFF(std::string path) {
         std::cout << "Ouverture du fichier impossible." << std::endl;
 }
 
-// Vincent
-// void Mesh::initFile(string filepath) {
-//     clearData();
-//     int nbVertices, nbFaces;
-//     ifstream file;
-//     string line, word1, word2, word3, word4;
-//     stringstream sline;
-
-//     cout << "initiating : " << filepath << endl;
-//     file.open(filepath);
-//     if (file.is_open()) {
-//         cout << "file opened succesfully" << endl;
-//         getline(file, line);
-//         sline = stringstream(line);
-//         // reading number of faces
-//         getline(sline, word1, ' ');
-//         nbVertices = stoi(word1);
-//         // reading number of vertices
-//         getline(sline, word1, ' ');
-//         nbFaces = stoi(word1);
-
-//         // reading vertices coordinates
-//         for (int i = 0; i < nbVertices; i++) {
-//             getline(file, line);
-//             sline = stringstream(line);
-//             getline(sline, word1, ' ');
-//             getline(sline, word2, ' ');
-//             getline(sline, word3, ' ');
-
-//             vertices.push_back(Point(stof(word1), stof(word2), stof(word3)));
-//         }
-
-//         // creating vertices vector
-//         // for (int i = 0; i < points.size(); i++) {
-//         //     vertices.push_back(Vertex(i, -1));
-//         // }
-
-//         // reading description of faces (only triangles)
-//         for (int i = 0; i < nbFaces; i++) {
-//             getline(file, line);
-//             sline = stringstream(line);
-//             getline(sline, word1, ' ');
-//             getline(sline, word2, ' ');
-//             getline(sline, word3, ' ');
-//             getline(sline, word4, ' ');
-//             triangles.push_back(Triangle(stoi(word2), stoi(word3), stoi(word4), -1, -1, -1));
-
-//             handleFace(stoi(word2), stoi(word3), stoi(word4), i);
-//         }
-//     }
-//     cout << "init end" << endl;
-// }
-
 void Mesh::findTopology() {
     std::map<std::pair<int, int>, std::pair<int, int>> topo;  // EDGE -> FACE
 
@@ -314,42 +253,6 @@ void Mesh::calculateLaplacian() {
     }
 }
 
-// void Mesh::splitTriangle(int indFace, int indVertex){
-//     int nbFace = faces.size();
-//     // update des voisins
-//     faces[faces[indFace].adjFaces[0]].adjFaces[findAdjFace(faces[indFace].adjFaces[0], indFace)] = nbFace;
-//     faces[faces[indFace].adjFaces[1]].adjFaces[findAdjFace(faces[indFace].adjFaces[1], indFace)] = nbFace + 1;
-
-//     // Creation des sous triangles
-//     faces.push_back(Face(faces[indFace].vertices[1], faces[indFace].vertices[2], indVertex,
-//             nbFace + 1, indFace, faces[indFace].adjFaces[0]));
-//     if(sommetF1 == -1){
-//         cout << "Impossible de flip" << endl;
-//         return;
-//     }
-//     // update des sommets pour flipper l'arrête
-//     faces[indFace1].vertices[(indSommetF1+2) % 3] = sommetF2;
-//     faces[indFace2].vertices[(indSommetF2+2) % 3] = sommetF1;
-
-//     // update de l'adjacence des faces flippés
-//     int temp = faces[indFace1].adjFaces[(indSommetF1+1) % 3];
-//     int temp2 = faces[indFace2].adjFaces[(indSommetF2+1) % 3];
-//     faces[indFace1].adjFaces[indSommetF1] = temp2;
-//     faces[indFace2].adjFaces[indSommetF2] = temp;
-
-//     faces[indFace1].adjFaces[(indSommetF1+1) % 3] = indFace2;
-//     faces[indFace2].adjFaces[(indSommetF2+1) % 3] = indFace1;
-
-//     // update de l'adjacence des faces voisines flippés
-//     for(int i = 0; i < 3; i++){
-//         if (faces[temp].adjFaces[i] == indFace1){
-//             faces[temp].adjFaces[i] = indFace2;
-//         }
-//         if (faces[temp2].adjFaces[i] == indFace2)
-//             faces[temp2].adjFaces[i] = indFace1;
-//     }
-// }
-
 // retourne l'id du nouveau sommet
 uint Mesh::splitTriangle(uint indFace, const Point &newVertexPos, bool delaunay) {
     Triangle *t = &triangles[indFace];  // current working face
@@ -383,7 +286,7 @@ uint Mesh::splitTriangle(uint indFace, const Point &newVertexPos, bool delaunay)
     t->adjacent[0] = t1Idx;
     t->adjacent[1] = t2Idx;
 
-    if(delaunay){
+    if (delaunay) {
         localDelaunay(indFace);
         localDelaunay(t1Idx);
         localDelaunay(t2Idx);
@@ -480,7 +383,7 @@ void Mesh::edgeFlip(int indFace1, int indFace2, bool delaunay) {
     }
     cout << "flip" << endl;
 
-    if(delaunay){
+    if (delaunay) {
         localDelaunay(indFace1);
         localDelaunay(indFace2);
     }
@@ -520,9 +423,10 @@ bool Mesh::is2D(int indF) {
 void Mesh::insertPoint2D(const Point &p, bool delaunay) {
     srand(time(NULL));
     // on commence sur une face aléatoire pas reliée au point infini
-    int indF = rand() % triangles.size();
-    while (!is2D(indF))
+    int indF;
+    do {
         indF = rand() % triangles.size();
+    } while (triangles[indF].isDeleted && !is2D(indF));
 
     // marche pour trouver la bonne face
     int n = 0;
@@ -553,23 +457,24 @@ void Mesh::insertPoint2D(const Point &p, bool delaunay) {
 }
 
 void Mesh::drawMeshLaplacian(bool wireframe) {
-    for (const auto &face : triangles) {
+    // for (const auto &face : triangles) {
+    for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
         if (wireframe) {
             glBegin(GL_LINE_STRIP);
         } else {
             glBegin(GL_TRIANGLES);
         }
-        double v = curvature[face.vertices[0]];
+        double v = curvature[it->vertices[0]];
         QColor c(0, 0, 0);
         c.setHsv((std::log(1 + 100 * v)), 255, 255);
         glColor3d(c.red(), c.green(), c.blue());
-        glPointDraw(vertices[face.vertices[0]].p);
-        v = curvature[face.vertices[1]];
+        glPointDraw(vertices[it->vertices[0]].p);
+        v = curvature[it->vertices[1]];
         glColor3d(c.red(), c.green(), c.blue());
-        glPointDraw(vertices[face.vertices[1]].p);
-        v = curvature[face.vertices[2]];
+        glPointDraw(vertices[it->vertices[1]].p);
+        v = curvature[it->vertices[2]];
         glColor3d(c.red(), c.green(), c.blue());
-        glPointDraw(vertices[face.vertices[2]].p);
+        glPointDraw(vertices[it->vertices[2]].p);
         glEnd();
     }
 }
@@ -725,8 +630,9 @@ void Mesh::makeDelaunay() {
     queue<pair<int, int>> nonDelaunay;
 
     // on cherche les arrêtes non delaunay
-    for (int i = 0; i < triangles.size(); i++) {
-        checkFaceDelaunayGlobal(nonDelaunay, i);
+    // for (int i = 0; i < triangles.size(); i++) {
+    for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
+        checkFaceDelaunayGlobal(nonDelaunay, it.getIdx());
     }
     // tant que la triangulation n'est pas de Delaunay
     while (!nonDelaunay.empty()) {
@@ -736,8 +642,8 @@ void Mesh::makeDelaunay() {
             nonDelaunay.pop();
         }
         // on re verifie s'il en reste encore
-        for (int i = 0; i < triangles.size(); i++) {
-            checkFaceDelaunayGlobal(nonDelaunay, i);
+        for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
+            checkFaceDelaunayGlobal(nonDelaunay, it.getIdx());
         }
     }
     cout << "global delaunay" << endl;
@@ -760,7 +666,7 @@ void Mesh::checkFaceDelaunayLocal(queue<pair<int, int>> &nonDelaunay, int idFace
     }
 }
 
-void Mesh::localDelaunay(int idF){
+void Mesh::localDelaunay(int idF) {
     // triangles adjacents non delaunay / arrêtes non delaunay
     queue<pair<int, int>> nonDelaunay;
 
@@ -816,7 +722,6 @@ void Mesh::changeIncidentFacesOfFaceEdges(uint idFace, std::pair<int, int> delet
 
 // idVert1 a garder et déplacer et idVert2 à supprimer
 int Mesh::collapseEdge(uint idVert1, uint idVert2) {
-    std::cout << "begin collapsing edge " << idVert1 << "and " << idVert2 << std::endl;
     // Verifier precond: pas de sommet en commun sur les 2 arêtes a collapse
     auto adjacentVerticesOfVert1 = adjacentVerticesOfVertex(idVert1);
     auto adjacentVerticesOfVert2 = adjacentVerticesOfVertex(idVert2);
@@ -839,7 +744,6 @@ int Mesh::collapseEdge(uint idVert1, uint idVert2) {
 
     // Trouver les 2 faces qui vont etre supprimées
     auto faces = findFacesWithCommonEdge(idVert1, idVert2);
-    std::cout << "Face1 to be deleted: " << faces.first << "\tFace2: " << faces.second << std::endl;
 
     // changer la face incidente des sommets des faces allant etre supprimees
     changeIncidentFacesOfFaceEdges(faces.first, faces);
@@ -853,7 +757,6 @@ int Mesh::collapseEdge(uint idVert1, uint idVert2) {
         if (cof.globalIdx() != faces.first && cof.globalIdx() != faces.second) {
             patchUp.push_back(cof.globalIdx());
         }
-        std::cout << "circulating" << std::endl;
         ++cof;
     } while (cof != begin);
     // Mettre en ordre l'adjacence des faces adjacentes aux faces a supprimer
@@ -904,18 +807,12 @@ void Mesh::drawMesh() {
         }
 
         glColor3d(1, 1, 1);
-        // for (const auto &face : triangles) {
-        //     glBegin(GL_TRIANGLES);
-        //     glPointDraw(vertices[face.vertices[0]].p);
-        //     glPointDraw(vertices[face.vertices[1]].p);
-        //     glPointDraw(vertices[face.vertices[2]].p);
-        //     glEnd();
-        // }
-        for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
+        // for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
+        for (int i = 0; i < triangles.size(); i++)  {
             glBegin(GL_TRIANGLES);
-            glPointDraw(vertices[it->vertices[0]].p);
-            glPointDraw(vertices[it->vertices[1]].p);
-            glPointDraw(vertices[it->vertices[2]].p);
+            glPointDraw(vertices[triangles[i].vertices[0]].p);
+            glPointDraw(vertices[triangles[i].vertices[1]].p);
+            glPointDraw(vertices[triangles[i].vertices[2]].p);
             glEnd();
         }
     }
@@ -933,7 +830,6 @@ void Mesh::drawMeshWireFrame() {
         glEnd();
 
         glColor3d(1, 1, 1);
-        // for (const auto &face : triangles) {
         for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
             glBegin(GL_LINE_STRIP);
             glPointDraw(vertices[it->vertices[0]].p);
