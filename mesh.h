@@ -85,6 +85,8 @@ class Mesh {
     std::vector<QVector3D> laplacians;
     std::vector<double> curvature;
 
+    std::vector<pair<int, int>> faceToCheckDelaunay;
+
    public:
     Mesh();
     //~Mesh();
@@ -279,10 +281,10 @@ class Mesh {
     void findTopology();
     void calculateLaplacian();
 
-    void splitTriangle(int indFace, int indVertex);
-    uint splitTriangle(uint indFace, const Point& p);
-    uint splitTriangleMiddle(int indFace);
-    void edgeFlip(int indFace1, int indFace2);
+    void splitTriangle(int indFace, int indVertex, bool delaunay);
+    uint splitTriangle(uint indFace, const Point& p, bool delaunay);
+    uint splitTriangleMiddle(int indFace, bool delaunay);
+    void edgeFlip(int indFace1, int indFace2, bool delaunay);
     float orientation2D(Point p1, Point p2, Point p3) const;
     float orientation2D(int i1, int i2, int i3) const;
     float orientation2D(const Triangle& t) const;
@@ -290,8 +292,8 @@ class Mesh {
     Point getNormal(Triangle f);
     Point getNormal(int idFace);
     bool isInside(const Point& p, const Triangle& t) const;
-    void insertPoint2D(const Point& p);
-    void insertRandPoint2D(int max);
+    void insertPoint2D(const Point& p, bool delaunay);
+    void insertRandPoint2D(int max, bool delaunay);
     bool is2D(int indF);
     bool isVert2D(int indV);
     bool isFace2D(int indF);
@@ -316,7 +318,7 @@ class Mesh {
     bool isInCirconscrit(int idFace, Point p);
 
     // complete l'enveloppe convexe avec des edge flip
-    void completeConvexHull(int idFace, int idVert);
+    void completeConvexHull(int idFace, int idVert, bool delaunay);
 
     int findAdjFace(int idFace, int id2find);
     int vertIndexInFace(int idFace, int idVert);
@@ -324,8 +326,10 @@ class Mesh {
     // retourne l'id du sommet dans idFace2 opposé à idFace1
     int opposedVert(int idFace1, int idFace2);
 
-    void checkFaceDelaunay(queue<pair<int, int>>& nonDelaunay, int idFace);
+    void checkFaceDelaunayGlobal(queue<pair<int, int>>& nonDelaunay, int idFace);
+    void checkFaceDelaunayLocal(queue<pair<int, int>>& nonDelaunay, int idFace);
     void makeDelaunay();
+    void localDelaunay(int idF);
 
     friend class MainWindow;
 };
