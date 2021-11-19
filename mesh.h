@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iterator>
 #include <queue>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -73,17 +74,20 @@ class Vertex {
     Vertex(const Point& _p, int id) : p(_p), triangleIdx(id) {}
     Point p;
     int triangleIdx = -1;
+    bool isDeleted = false;
+    // int pointIndex;
+    // int faceIndex;
 
-    int pointIndex;
-    int faceIndex;
-
-    Vertex(int _pointIndex) : pointIndex(_pointIndex) {}
-    Vertex(int _pointIndex, int _faceIndex) : pointIndex(_pointIndex), faceIndex(_faceIndex) {}
+    // Vertex(int _pointIndex) : pointIndex(_pointIndex) {}
+    // Vertex(int _pointIndex, int _faceIndex) : pointIndex(_pointIndex), faceIndex(_faceIndex) {}
+    void remove() { isDeleted = true; }
 };
 
 class Triangle {
    public:
-    std::array<uint, 3> vertices;  // Trigonometric order
+    bool isDeleted = false;
+    std::array<uint, 3>
+        vertices;  // Trigonometric order
     std::array<uint, 3> adjacent;
     // Constraint: vertex i facing adjacent triangle i
     Triangle();
@@ -96,6 +100,7 @@ class Triangle {
 
     int getAdjacentFaceFromGlobalVertex(int vertexIdx) const;
     uint& getVertexFromAdjacentFace(uint faceIdx);
+    void remove() { isDeleted = true; }
 };
 
 class Mesh {
@@ -151,23 +156,25 @@ class Mesh {
         using value_type = Triangle;
         using pointer = Triangle*;
         using reference = Triangle&;
-        Iterator_on_faces() : m_ptr(nullptr), currentIdx(-1) {}
-        Iterator_on_faces(const Iterator_on_faces& copy) : m_ptr(copy.m_ptr), currentIdx(copy.currentIdx) {}
-        Iterator_on_faces(pointer ptr) : m_ptr(ptr) {}
+        Iterator_on_faces(Mesh &m) : m_mesh(m), m_ptr(nullptr), currentIdx(-1) {}
+        Iterator_on_faces(const Iterator_on_faces& copy) : m_mesh(copy.m_mesh), m_ptr(copy.m_ptr), currentIdx(copy.currentIdx) {}
+        Iterator_on_faces(Mesh &m, pointer ptr) : m_mesh(m), m_ptr(ptr) {}
 
         reference operator*() const { return *m_ptr; }
         pointer operator->() { return m_ptr; }
 
         // Prefix increment
         Iterator_on_faces& operator++() {
-            currentIdx++;
-            m_ptr++;
+            do {
+                m_ptr++;
+                currentIdx++;
+            } while (m_ptr->isDeleted && currentIdx < m_mesh.triangles.size());
+
             return *this;
         }
 
         // Postfix increment
         Iterator_on_faces operator++(int) {
-            currentIdx++;
             Iterator_on_faces tmp = *this;
             ++(*this);
             return tmp;
@@ -179,6 +186,7 @@ class Mesh {
         friend bool operator!=(const Iterator_on_faces& a, const Iterator_on_faces& b) { return a.m_ptr != b.m_ptr; }
 
        private:
+        Mesh &m_mesh;
         pointer m_ptr;
         std::size_t currentIdx = 0;
     };
@@ -230,7 +238,8 @@ class Mesh {
         using value_type = Vertex;
         using pointer = Vertex*;
         using reference = Vertex&;
-        Circulator_on_vertices(Mesh& mesh, pointer ptr, std::size_t center_idx, Circulator_on_faces cof, uint vertexIdx) : m_mesh(mesh),
+        Circulator_on_vertices(Mesh& mesh, pointer ptr, std::size_t center_idx, Circulator_on_faces cof, uint vertexIdx)
+            : m_mesh(mesh),
                                                                                                                            m_ptr(ptr),
                                                                                                                            m_center_idx(center_idx),
                                                                                                                            m_cof(cof),
@@ -272,10 +281,13 @@ class Mesh {
         return Iterator_on_vertices(&(*vertices.end()));
     }
     Iterator_on_faces faces_begin() {
-        return Iterator_on_faces(&(*triangles.begin()));
+        auto it = triangles.begin();
+        while (it->isDeleted)
+            ++it;
+        return Iterator_on_faces(*this, &(*it));
     }
     Iterator_on_faces faces_past_the_end() {
-        return Iterator_on_faces(&(*triangles.end()));
+        return Iterator_on_faces(*this, &(*triangles.end()));
     }
 
     Circulator_on_faces incident_faces(std::size_t vIdx) {
@@ -316,6 +328,8 @@ class Mesh {
     bool isFace2D(int indF);
 
     std::pair<int, int> findFacesWithCommonEdge(uint idVert1, uint idVert2);
+    std::set<int> adjacentVerticesOfVertex(uint indV);
+    void changeIncidentFacesOfFaceEdges(uint idFace, std::pair<int, int> deletedFaces);
     int collapseEdge(uint idVert1, uint idVert2);
 
     void drawMesh();
@@ -328,8 +342,9 @@ class Mesh {
     // map <arrete>, <face, indice sommet opposé>
     // map<pair<int, int>, pair<int, int>> topology;
 
-    int currentFace;
+    int currentFace = 0;
     bool highlightNeighbors;
+    uint selectedVertex1 = 1, selectedVertex2 = 2;
 
     void handleFace(int indVertex1, int indVertex2, int indVertex3, int faceIndex);
     void handleEdge(int indVertex1, int indVertex2, int faceIndex, int opposedVertex);

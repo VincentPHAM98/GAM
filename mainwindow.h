@@ -39,7 +39,9 @@ class MainWindow : public QMainWindow {
 
     void on_collapseVertice1_valueChanged(int arg1);
 
-   private:
+    void on_collapseVertice2_valueChanged(int arg1);
+
+private:
     Ui::MainWindow *ui;
 };
 

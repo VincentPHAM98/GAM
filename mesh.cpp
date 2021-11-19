@@ -122,15 +122,15 @@ Point Point::normalize(Point u) {
 }
 
 Mesh::Mesh() {
-    loadOFF("data/test.off");
+    // loadOFF("data/test.off");
 
-    srand(time(NULL));
+    // srand(time(NULL));
     currentFace = 0;
     highlightNeighbors = 0;
 
-    cout << orientation2D(Point(2, 2, 0), Point(1, 1, 0), Point(0, 2, 0)) << endl;
+    // cout << orientation2D(Point(2, 2, 0), Point(1, 1, 0), Point(0, 2, 0)) << endl;
 
-    insertPoint2D(Point(2.25, 0.5, 0.));
+    // insertPoint2D(Point(2.25, 0.5, 0.));
     //    splitTriangle(8, Point(02.25,0.5,0.));
 
     //    loadOFF("../data/queen.off");
@@ -771,8 +771,49 @@ std::pair<int, int> Mesh::findFacesWithCommonEdge(uint idVert1, uint idVert2) {
     return std::make_pair<int, int>((int)faces[0], (int)faces[1]);
 }
 
+std::set<int> Mesh::adjacentVerticesOfVertex(uint indV) {
+    std::set<int> vertices;
+    auto cov = adjacent_vertices(indV);
+    auto begin = cov;
+    do {
+        vertices.insert(cov.globalVertexIdx());
+        ++cov;
+    } while (cov != begin);
+    return vertices;
+}
+
+// Si les sommets d'un triangle ont pour indice de triangle lui même,
+// change les sommets pour avoir pour indice les triangles voisins.
+void Mesh::changeIncidentFacesOfFaceEdges(uint idFace, std::pair<int, int> deletedFaces) {
+    Triangle &t = triangles[idFace];
+    for (int i = 0; i < 3; i++) {
+        Vertex &v = vertices[t.vertices[i]];
+        // si le sommet pointe vers les triangles allant disparaitre
+        auto cof = incident_faces(t.vertices[i]);
+        while (v.triangleIdx == deletedFaces.first || v.triangleIdx == deletedFaces.second) {
+            ++cof;
+            v.triangleIdx = cof.globalIdx();
+        }
+    }
+}
+
 // idVert1 a garder et déplacer et idVert2 à supprimer
 int Mesh::collapseEdge(uint idVert1, uint idVert2) {
+    std::cout << "begin collapsing edge " << idVert1 << "and " << idVert2 << std::endl;
+    // Verifier precond: pas de sommet en commun sur les 2 arêtes a collapse
+    auto adjacentVerticesOfVert1 = adjacentVerticesOfVertex(idVert1);
+    auto adjacentVerticesOfVert2 = adjacentVerticesOfVertex(idVert2);
+    std::vector<int> intersection;
+    std::set_intersection(
+        adjacentVerticesOfVert1.begin(), adjacentVerticesOfVert1.end(),
+        adjacentVerticesOfVert2.begin(), adjacentVerticesOfVert2.end(),
+        std::back_inserter(intersection));
+    if (intersection.size() != 2) {
+        // modal qt pour prevenir
+        std::cout << "Err: les arêtes à collapse ont une arête en commun." << std::endl;
+        return 1;
+    }
+
     // Deplacer le premier sommet au milieu des 2
     Point middle = (vertices[idVert1].p + vertices[idVert2].p) / 2;
     // std::cout << "v1: " << vertices[idVert1].p << "v2: " << vertices[idVert2].p << "middle: " << middle << std::endl;
@@ -782,34 +823,45 @@ int Mesh::collapseEdge(uint idVert1, uint idVert2) {
     // Trouver les 2 faces qui vont etre supprimées
     auto faces = findFacesWithCommonEdge(idVert1, idVert2);
     std::cout << "Face1 to be deleted: " << faces.first << "\tFace2: " << faces.second << std::endl;
-    //      Mettre en ordre l'adjacence des faces adjacentes aux faces a supprimer
+
+    // changer la face incidente des sommets des faces allant etre supprimees
+    changeIncidentFacesOfFaceEdges(faces.first, faces);
+    changeIncidentFacesOfFaceEdges(faces.second, faces);
+    // Lister les faces qui vont perdre leur sommet
+    // pour arranger leur sommet plus tard
+    auto cof = incident_faces(idVert2);
+    auto begin = cof;
+    std::vector<int> patchUp;
+    do {
+        if (cof.globalIdx() != faces.first && cof.globalIdx() != faces.second) {
+            patchUp.push_back(cof.globalIdx());
+        }
+        std::cout << "circulating" << std::endl;
+        ++cof;
+    } while (cof != begin);
+    // Mettre en ordre l'adjacence des faces adjacentes aux faces a supprimer
     int adjTriangle1Idx, adjTriangle2Idx;
-    //          Adjacence face 1:
+    //      Adjacence face 1:
     adjTriangle1Idx = triangles[faces.first].getAdjacentFaceFromGlobalVertex(idVert1);
     adjTriangle2Idx = triangles[faces.first].getAdjacentFaceFromGlobalVertex(idVert2);
     triangles[adjTriangle1Idx].getVertexFromAdjacentFace(faces.first) = adjTriangle2Idx;
     triangles[adjTriangle2Idx].getVertexFromAdjacentFace(faces.first) = adjTriangle1Idx;
-    //          Adjacence face 2:
+    //      Adjacence face 2:
     adjTriangle1Idx = triangles[faces.second].getAdjacentFaceFromGlobalVertex(idVert1);
     adjTriangle2Idx = triangles[faces.second].getAdjacentFaceFromGlobalVertex(idVert2);
     triangles[adjTriangle1Idx].getVertexFromAdjacentFace(faces.second) = adjTriangle2Idx;
     triangles[adjTriangle2Idx].getVertexFromAdjacentFace(faces.second) = adjTriangle1Idx;
 
-    // Trouver les faces qui vont perdre leur sommet et arranger leur sommet
-    auto cof = incident_faces(idVert2);
-    auto begin = cof;
-    // std::vector<int> patchUp;
-    do {
-        if (cof.globalIdx() != faces.first && cof.globalIdx() != faces.second) {
-            // patchUp.push_back(cof.globalIdx());
-            cof->vertices[cof->getInternalIdx(idVert2)] = idVert1;
-        }
-    } while (cof != begin);
+    // arranger les sommets des faces de tout a l'heure
+    for (auto &&idFace : patchUp) {
+        triangles[idFace].vertices[triangles[idFace].getInternalIdx(idVert2)] = idVert1;
+    }
 
     // Supprimer l'arrete et les 2 faces
-    triangles.erase(triangles.begin() + faces.first);
-    triangles.erase(triangles.begin() + faces.second);
-    vertices.erase(vertices.begin() + idVert2);
+    triangles[faces.first].remove();
+    triangles[faces.second].remove();
+    vertices[idVert2].remove();
+    return 0;
 }
 
 void Mesh::drawMesh() {
@@ -835,34 +887,52 @@ void Mesh::drawMesh() {
         }
 
         glColor3d(1, 1, 1);
-        for (const auto &face : triangles) {
+        // for (const auto &face : triangles) {
+        //     glBegin(GL_TRIANGLES);
+        //     glPointDraw(vertices[face.vertices[0]].p);
+        //     glPointDraw(vertices[face.vertices[1]].p);
+        //     glPointDraw(vertices[face.vertices[2]].p);
+        //     glEnd();
+        // }
+        for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
             glBegin(GL_TRIANGLES);
-            glPointDraw(vertices[face.vertices[0]].p);
-            glPointDraw(vertices[face.vertices[1]].p);
-            glPointDraw(vertices[face.vertices[2]].p);
+            glPointDraw(vertices[it->vertices[0]].p);
+            glPointDraw(vertices[it->vertices[1]].p);
+            glPointDraw(vertices[it->vertices[2]].p);
             glEnd();
         }
     }
 }
 
 void Mesh::drawMeshWireFrame() {
-    glColor3d(1, 1, 1);
-
-    for (const auto &face : triangles) {
-        glBegin(GL_LINE_STRIP);
-        glPointDraw(vertices[face.vertices[0]].p);
-        glPointDraw(vertices[face.vertices[1]].p);
+    // color selected vertices (for edge collapse)
+    if (!triangles.empty()) {
+        glColor3d(0, 1, 1);
+        glPointSize(7.F);
+        glBegin(GL_POINTS);
+        glPointDraw(vertices[selectedVertex1].p);
+        glColor3d(1, 0, 1);
+        glPointDraw(vertices[selectedVertex2].p);
         glEnd();
 
-        glBegin(GL_LINE_STRIP);
-        glPointDraw(vertices[face.vertices[0]].p);
-        glPointDraw(vertices[face.vertices[2]].p);
-        glEnd();
+        glColor3d(1, 1, 1);
+        // for (const auto &face : triangles) {
+        for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
+            glBegin(GL_LINE_STRIP);
+            glPointDraw(vertices[it->vertices[0]].p);
+            glPointDraw(vertices[it->vertices[1]].p);
+            glEnd();
 
-        glBegin(GL_LINE_STRIP);
-        glPointDraw(vertices[face.vertices[1]].p);
-        glPointDraw(vertices[face.vertices[2]].p);
-        glEnd();
+            glBegin(GL_LINE_STRIP);
+            glPointDraw(vertices[it->vertices[0]].p);
+            glPointDraw(vertices[it->vertices[2]].p);
+            glEnd();
+
+            glBegin(GL_LINE_STRIP);
+            glPointDraw(vertices[it->vertices[1]].p);
+            glPointDraw(vertices[it->vertices[2]].p);
+            glEnd();
+        }
     }
 }
 
