@@ -116,6 +116,7 @@ Point Point::normalize(Point u) {
 Mesh::Mesh() {
     currentFace = 0;
     highlightNeighbors = 0;
+    srand(time(NULL));
 }
 
 std::pair<int, int> make_ordered_pair(int a, int b) {
@@ -381,7 +382,6 @@ void Mesh::edgeFlip(int indFace1, int indFace2, bool delaunay) {
         if (triangles[temp2].adjacent[i] == indFace2)
             triangles[temp2].adjacent[i] = indFace1;
     }
-    cout << "flip" << endl;
 
     if (delaunay) {
         localDelaunay(indFace1);
@@ -421,7 +421,6 @@ bool Mesh::is2D(int indF) {
 }
 
 void Mesh::insertPoint2D(const Point &p, bool delaunay) {
-    srand(time(NULL));
     // on commence sur une face aléatoire pas reliée au point infini
     int indF;
     do {
@@ -445,7 +444,6 @@ void Mesh::insertPoint2D(const Point &p, bool delaunay) {
             return;
         }
     }
-    cout << "point inséré" << endl;
     int indV = splitTriangle(indF, p, delaunay);
 
     // complete l'enveloppe convexe si ajout en dehors
@@ -556,7 +554,6 @@ void Mesh::completeConvexHull(int idFace, int idVert, bool delaunay) {
 }
 
 void Mesh::insertRandPoint2D(int max, bool delaunay) {
-    srand(time(NULL));
     insertPoint2D(Point(rand() % (2 * max) - max, rand() % (2 * max) - max, 0), delaunay);
 }
 
@@ -807,12 +804,12 @@ void Mesh::drawMesh() {
         }
 
         glColor3d(1, 1, 1);
-        // for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
-        for (int i = 0; i < triangles.size(); i++)  {
+        // for (int i = 0; i < triangles.size(); i++)  {
+        for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
             glBegin(GL_TRIANGLES);
-            glPointDraw(vertices[triangles[i].vertices[0]].p);
-            glPointDraw(vertices[triangles[i].vertices[1]].p);
-            glPointDraw(vertices[triangles[i].vertices[2]].p);
+            glPointDraw(vertices[it->vertices[0]].p);
+            glPointDraw(vertices[it->vertices[1]].p);
+            glPointDraw(vertices[it->vertices[2]].p);
             glEnd();
         }
     }

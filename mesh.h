@@ -17,11 +17,11 @@ using namespace std;
 
 class Point {
    public:
-    double _x;
-    double _y;
-    double _z;
+    double _x = 0.;
+    double _y = 0.;
+    double _z = 0.;
 
-    Point() : _x(), _y(), _z() {}
+    Point() : _x(0.), _y(0.), _z(0.) {}
     Point(const Point& p) : _x(p._x), _y(p._y), _z(p._z) {}
     Point& operator=(const Point& p) {
         _x = p._x;
@@ -283,10 +283,14 @@ class Mesh {
         return Iterator_on_vertices(&(*vertices.end()));
     }
     Iterator_on_faces faces_begin() {
-        auto it = triangles.begin();
-        while (it->isDeleted)
+        // auto it = triangles.begin();
+        // while (it->isDeleted && it != triangles.end())
+        //     ++it;
+        // return Iterator_on_faces(*this, &(*it));
+        auto it = Iterator_on_faces(*this, triangles.data());
+        if (it->isDeleted)
             ++it;
-        return Iterator_on_faces(*this, &(*it));
+        return it;
     }
     Iterator_on_faces faces_past_the_end() {
         return Iterator_on_faces(*this, &(*triangles.end()));
