@@ -425,7 +425,7 @@ void Mesh::insertPoint2D(const Point &p, bool delaunay) {
     int indF;
     do {
         indF = rand() % triangles.size();
-    } while (triangles[indF].isDeleted && !is2D(indF));
+    } while (triangles[indF].isDeleted || !is2D(indF));
 
     // marche pour trouver la bonne face
     int n = 0;
@@ -452,29 +452,6 @@ void Mesh::insertPoint2D(const Point &p, bool delaunay) {
         completeConvexHull(indF, indV, delaunay);
     }
     currentFace = indF;
-}
-
-void Mesh::drawMeshLaplacian(bool wireframe) {
-    // for (const auto &face : triangles) {
-    for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
-        if (wireframe) {
-            glBegin(GL_LINE_STRIP);
-        } else {
-            glBegin(GL_TRIANGLES);
-        }
-        double v = curvature[it->vertices[0]];
-        QColor c(0, 0, 0);
-        c.setHsv((std::log(1 + 100 * v)), 255, 255);
-        glColor3d(c.red(), c.green(), c.blue());
-        glPointDraw(vertices[it->vertices[0]].p);
-        v = curvature[it->vertices[1]];
-        glColor3d(c.red(), c.green(), c.blue());
-        glPointDraw(vertices[it->vertices[1]].p);
-        v = curvature[it->vertices[2]];
-        glColor3d(c.red(), c.green(), c.blue());
-        glPointDraw(vertices[it->vertices[2]].p);
-        glEnd();
-    }
 }
 
 void Mesh::clearData() {
@@ -869,6 +846,29 @@ void Mesh::drawMeshWireFrame() {
             glPointDraw(vertices[it->vertices[2]].p);
             glEnd();
         }
+    }
+}
+
+void Mesh::drawMeshLaplacian(bool wireframe) {
+    // for (const auto &face : triangles) {
+    for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
+        if (wireframe) {
+            glBegin(GL_LINE_STRIP);
+        } else {
+            glBegin(GL_TRIANGLES);
+        }
+        double v = curvature[it->vertices[0]];
+        QColor c(0, 0, 0);
+        c.setHsv((std::log(1 + 100 * v)), 255, 255);
+        glColor3d(c.red(), c.green(), c.blue());
+        glPointDraw(vertices[it->vertices[0]].p);
+        v = curvature[it->vertices[1]];
+        glColor3d(c.red(), c.green(), c.blue());
+        glPointDraw(vertices[it->vertices[1]].p);
+        v = curvature[it->vertices[2]];
+        glColor3d(c.red(), c.green(), c.blue());
+        glPointDraw(vertices[it->vertices[2]].p);
+        glEnd();
     }
 }
 
