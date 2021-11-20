@@ -33,6 +33,26 @@
       <item row="5" column="3">
        <widget class="QSpinBox" name="flipFace2"/>
       </item>
+      <item row="6" column="0">
+       <widget class="QPushButton" name="addPointButton">
+        <property name="text">
+         <string>Add 2D Point</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1" colspan="2">
+       <widget class="QLineEdit" name="xBox">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;x&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="whatsThis">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="2">
        <widget class="QSpinBox" name="faceSelectBox"/>
       </item>
@@ -53,7 +73,7 @@
         </property>
        </widget>
       </item>
-      <item row="9" column="0" colspan="5">
+      <item row="10" column="0" colspan="5">
        <widget class="QPushButton" name="pushButton">
         <property name="text">
          <string>exit</string>
@@ -105,23 +125,17 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
-       <widget class="QPushButton" name="addPointButton">
+      <item row="9" column="0" colspan="2">
+       <widget class="QPushButton" name="voronoiButton">
         <property name="text">
-         <string>Add 2D Point</string>
+         <string>Compute Voronoi</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="1" colspan="2">
-       <widget class="QLineEdit" name="xBox">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;x&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="whatsThis">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
+      <item row="9" column="2" colspan="2">
+       <widget class="QCheckBox" name="voronoiBox">
         <property name="text">
-         <string/>
+         <string>Draw Voronoi</string>
         </property>
        </widget>
       </item>

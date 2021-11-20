@@ -27,9 +27,11 @@ class Point {
     QVector3D operator-(const Point& p);
     friend std::ostream& operator<<(std::ostream& os, const Point& p);
 
-    Point cross(Point u, Point v);
-    float dot(Point u, Point v);
+    Point cross(Point v);
+    float dot(Point v);
     Point normalize(Point u);
+    float length2D();
+    float tangente(Point a, Point b, Point c);
 
     Point& operator+(const Point p) {
         _x += p._x;
@@ -44,6 +46,13 @@ class Point {
     //     _z -= p._z;
     //     return *this;
     // }
+
+    Point& operator*(const float f) {
+        _x *= f;
+        _y *= f;
+        _z *= f;
+        return *this;
+    }
 };
 
 class Triangle;
@@ -85,7 +94,7 @@ class Mesh {
     std::vector<QVector3D> laplacians;
     std::vector<double> curvature;
 
-    std::vector<pair<int, int>> faceToCheckDelaunay;
+    std::vector<Point> voronoiCenter;
 
    public:
     Mesh();
@@ -301,6 +310,7 @@ class Mesh {
     void drawMesh();
     void drawMeshWireFrame();
     void drawMeshLaplacian(bool wireframe = false);
+    void drawVoronoi();
     void test();
 
     // vector<Point> points;
@@ -331,6 +341,10 @@ class Mesh {
     void makeDelaunay();
     void localDelaunay(int idF);
 
+    float tangente(Point a, Point b, Point c);
+    Point centreCercleCirconscrit(int idF);
+    void computeVoronoi();
+
     friend class MainWindow;
 };
 
@@ -341,6 +355,7 @@ class GeometricWorld  //Generally used to create a singleton instance
     GeometricWorld();
     void draw();
     void drawWireFrame();
+    void drawVoronoi();
     // ** TP Can be extended with further elements;
     Mesh _mesh;
 };

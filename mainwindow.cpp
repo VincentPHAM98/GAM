@@ -12,7 +12,7 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::on_pushButton_3_released() {
-    ui->widget->toggleWireFrame = ui->widget->toggleWireFrame ^= true;
+    ui->widget->toggleWireFrame = !ui->widget->toggleWireFrame;
 }
 
 void MainWindow::on_pushButton_2_released() {
@@ -51,4 +51,14 @@ void MainWindow::on_addPointButton_released() {
 
 void MainWindow::on_DelaunayButton_released() {
     ui->widget->_geomWorld._mesh.makeDelaunay();
+}
+
+void MainWindow::on_voronoiButton_released()
+{
+    ui->widget->_geomWorld._mesh.computeVoronoi();
+}
+
+void MainWindow::on_voronoiBox_stateChanged(int arg1)
+{
+    ui->widget->displayVoronoi = !ui->widget->displayVoronoi;
 }

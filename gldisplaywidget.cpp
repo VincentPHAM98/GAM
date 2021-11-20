@@ -23,6 +23,7 @@ void GLDisplayWidget::initializeGL() {
     glEnable(GL_COLOR_MATERIAL);
 
     toggleWireFrame = false;
+    displayVoronoi = false;
 
     //** TP : To add....
     // Construction of the GeometricWorld before it is displayed
@@ -50,6 +51,8 @@ void GLDisplayWidget::paintGL() {
         _geomWorld.drawWireFrame();
     else
         _geomWorld.draw();
+    if(displayVoronoi)
+        _geomWorld.drawVoronoi();
 }
 
 void GLDisplayWidget::resizeGL(int width, int height) {

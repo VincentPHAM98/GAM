@@ -37,6 +37,10 @@ class MainWindow : public QMainWindow {
 
     // void on_DelaunayButton_clicked();
 
+    void on_voronoiButton_released();
+
+    void on_voronoiBox_stateChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
 };
