@@ -72,3 +72,8 @@ void MainWindow::on_collapseVertice2_valueChanged(int arg1) {
     }
     ui->widget->_geomWorld._mesh.selectedVertex2 = arg1;
 }
+
+void MainWindow::on_edgeCollapseButton_released()
+{
+    ui->widget->_geomWorld._mesh.collapseShortestEdge();
+}

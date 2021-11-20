@@ -120,24 +120,25 @@ class Mesh {
         using value_type = Vertex;
         using pointer = Vertex*;
         using reference = Vertex&;
-        Iterator_on_vertices() : m_ptr(nullptr), currentIdx(-1) {}
-        Iterator_on_vertices(const Iterator_on_vertices& copy) : m_ptr(copy.m_ptr), currentIdx(copy.currentIdx) {}
-        Iterator_on_vertices(pointer ptr) : m_ptr(ptr) {}
+        Iterator_on_vertices(Mesh &m) : m_mesh(m), m_ptr(nullptr), currentIdx(-1) {}
+        Iterator_on_vertices(const Iterator_on_vertices& copy) : m_mesh(copy.m_mesh), m_ptr(copy.m_ptr), currentIdx(copy.currentIdx) {}
+        Iterator_on_vertices(Mesh &m, pointer ptr) : m_mesh(m), m_ptr(ptr) {}
 
         reference operator*() const { return *m_ptr; }
         pointer operator->() { return m_ptr; }
 
         // Prefix increment
         Iterator_on_vertices& operator++() {
-            currentIdx++;
-            m_ptr++;
+            do {
+                m_ptr++;
+                currentIdx++;
+            } while (m_ptr->isDeleted && currentIdx < m_mesh.vertices.size());
             return *this;
         }
 
         // Postfix increment
         Iterator_on_vertices operator++(int) {
-            currentIdx++;
-            Iterator_on_vertices tmp = *this;
+            auto tmp = *this;
             ++(*this);
             return tmp;
         }
@@ -148,6 +149,7 @@ class Mesh {
         friend bool operator!=(const Iterator_on_vertices& a, const Iterator_on_vertices& b) { return a.m_ptr != b.m_ptr; }
 
        private:
+        Mesh &m_mesh;
         pointer m_ptr;
         std::size_t currentIdx = 0;
     };
@@ -277,16 +279,15 @@ class Mesh {
     };
 
     Iterator_on_vertices vertices_begin() {
-        return Iterator_on_vertices(&(*vertices.begin()));
+        auto it = Iterator_on_vertices(*this, vertices.data());
+        if (it->isDeleted)
+            ++it;
+        return it;
     }
     Iterator_on_vertices vertices_past_the_end() {
-        return Iterator_on_vertices(&(*vertices.end()));
+        return Iterator_on_vertices(*this, &(*vertices.end()));
     }
     Iterator_on_faces faces_begin() {
-        // auto it = triangles.begin();
-        // while (it->isDeleted && it != triangles.end())
-        //     ++it;
-        // return Iterator_on_faces(*this, &(*it));
         auto it = Iterator_on_faces(*this, triangles.data());
         if (it->isDeleted)
             ++it;
@@ -337,6 +338,7 @@ class Mesh {
     std::set<int> adjacentVerticesOfVertex(uint indV);
     void changeIncidentFacesOfFaceEdges(uint idFace, std::pair<int, int> deletedFaces);
     int collapseEdge(uint idVert1, uint idVert2);
+    void collapseShortestEdge();
 
     void drawMesh();
     void drawMeshWireFrame();

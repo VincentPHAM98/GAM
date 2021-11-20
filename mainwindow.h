@@ -41,6 +41,8 @@ class MainWindow : public QMainWindow {
 
     void on_collapseVertice2_valueChanged(int arg1);
 
+    void on_edgeCollapseButton_released();
+
 private:
     Ui::MainWindow *ui;
 };

@@ -781,6 +781,32 @@ int Mesh::collapseEdge(uint idVert1, uint idVert2) {
     return 0;
 }
 
+void Mesh::collapseShortestEdge() {
+    // on cherche les arêtes les plus courtes
+    using Edge = std::pair<int, int>;
+    std::priority_queue<std::pair<double, Edge>,
+                        std::vector<std::pair<double, Edge>>,
+                        std::greater<std::pair<double, Edge>>>
+        queue;
+
+    for (auto it = vertices_begin(); it != vertices_past_the_end(); ++it) {
+        auto cov = adjacent_vertices(it.getIdx());
+        auto begin = cov;
+        do {
+            Edge edge = std::make_pair((int)it.getIdx(), cov.globalVertexIdx());
+            auto edgeVector = cov->p - it->p;
+            double length = edgeVector.length();
+            queue.push(std::make_pair(length, edge));
+            ++cov;
+        } while (cov != begin);
+    }
+    int success;
+    do {
+        success = collapseEdge(queue.top().second.first, queue.top().second.second);
+        queue.pop();
+    } while (success && queue.size());
+}
+
 void Mesh::drawMesh() {
     if (!triangles.empty()) {
         glColor3d(1, 0, 0);
