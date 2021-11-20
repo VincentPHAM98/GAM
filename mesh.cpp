@@ -102,13 +102,13 @@ float Point::dot(Point v) {
     return _x * v._x + _y * v._y + _z * v._z;
 }
 
-Point Point::normalize(Point u) {
-    float d = sqrt(u._x * u._x + u._y * u._y + u._z * u._z);
-    return Point(u._x / d, u._y / d, u._z / d);
+Point Point::normalize() {
+    float d = sqrt(_x * _x + _y * _y + _z * _z);
+    return Point(_x / d, _y / d, _z / d);
 }
 
-float Point::length2D(){
-    return sqrt(_x * _x + _y * _y);
+float Point::length(){
+    return sqrt(_x * _x + _y * _y + _z * _z);
 }
 
 Mesh::Mesh() {
@@ -694,16 +694,13 @@ bool Mesh::isInCirconscrit(int idF, Point p) {
 
 // cherche parmi les voisins de idFace si leurs arrêtes sont Delaunay et les ajoute à la queue
 void Mesh::checkFaceDelaunayGlobal(queue<pair<int, int>> &nonDelaunay, int idFace) {
-    cout << "checking face : " << idFace << endl;
     for (int j = 0; j < 3; j++) {
         int idAdjacent = triangles[idFace].adjacent[j];
         // ne regarde que des nouvelles arrête pas dans une face infinie
         if (idAdjacent > idFace && isFace2D(idFace) && isFace2D(idAdjacent)) {
             Vertex d = vertices[triangles[idAdjacent].vertices[opposedVert(idFace, idAdjacent)]];
-            cout << triangles[idAdjacent].vertices[opposedVert(idFace, idAdjacent)] << endl;
             // si non delaunay localement, on ajoute à la queue
             if (isInCirconscrit(idFace, d.p)) {
-                cout << idAdjacent << endl;
                 nonDelaunay.push({idFace, idAdjacent});
             }
         }
@@ -734,16 +731,13 @@ void Mesh::makeDelaunay() {
 }
 
 void Mesh::checkFaceDelaunayLocal(queue<pair<int, int>> &nonDelaunay, int idFace) {
-    cout << "checking face : " << idFace << endl;
     for (int j = 0; j < 3; j++) {
         int idAdjacent = triangles[idFace].adjacent[j];
         // ne regarde que des nouvelles arrête pas dans une face infinie
         if (isFace2D(idFace) && isFace2D(idAdjacent)) {
             Vertex d = vertices[triangles[idAdjacent].vertices[opposedVert(idFace, idAdjacent)]];
-            cout << triangles[idAdjacent].vertices[opposedVert(idFace, idAdjacent)] << endl;
             // si non delaunay localement, on ajoute à la queue
             if (isInCirconscrit(idFace, d.p)) {
-                cout << idAdjacent << endl;
                 nonDelaunay.push({idFace, idAdjacent});
             }
         }
@@ -757,7 +751,6 @@ void Mesh::localDelaunay(int idF){
     checkFaceDelaunayLocal(nonDelaunay, idF);
 
     while (!nonDelaunay.empty()) {
-        cout << nonDelaunay.front().first << " " << nonDelaunay.front().second << endl;
         edgeFlip(nonDelaunay.front().first, nonDelaunay.front().second, 0);
         localDelaunay(nonDelaunay.front().first);
         localDelaunay(nonDelaunay.front().second);
@@ -771,28 +764,17 @@ float Point::tangente(Point a, Point b, Point c){
     Point crossABC = bc.cross(ba);
     double dotABC = bc.dot(ba);
 
-    // pour éviter d'avoi des nan avec un triangle rectangle
+    // pour éviter d'avoir des nan avec un triangle rectangle
     if(dotABC != 0){
-        cout << crossABC._z << " " << crossABC.length2D() << " " << bc.dot(ba) << endl;
-        cout << crossABC.length2D() / bc.dot(ba) << endl;
         if(crossABC._z < 0)
-            return -crossABC.length2D() / bc.dot(ba);
-        return crossABC.length2D() / bc.dot(ba);
+            return -crossABC.length() / bc.dot(ba);
+        return crossABC.length() / bc.dot(ba);
     }
     return 42;
 }
 
 Point Mesh::centreCercleCirconscrit(int idF){
-//    Point a = vertices[triangles[idF].vertices[0]].p;
-//    Point b = vertices[triangles[idF].vertices[1]].p;
-//    Point c = vertices[triangles[idF].vertices[2]].p;
-//    Point p = a * 0.333 + b * 0.333 + c * 0.333;
-//    return p;
-
-//    float tanABC = a.tangente(a, b, c);
-//    float tanBCA = a.tangente(b, c, a);
-//    float tanCAB = a.tangente(c, a, b);
-
+    // Methode des tangentes vu en cours
     Point _p[3];
     double tan[3];
     for(int i = 0; i < 3; i++){
@@ -802,15 +784,14 @@ Point Mesh::centreCercleCirconscrit(int idF){
         tan[i] = _p[i].tangente(vertices[triangles[idF].vertices[(i+2)%3]].p,
                                 vertices[triangles[idF].vertices[(i)%3]].p,
                                 vertices[triangles[idF].vertices[(i+1)%3]].p);
+        // si triangle rectangle, centre du cercle au milieu de l'hypotenuse
         if(tan[i] == 42){
-            cout << "rectangle !" << endl;
             Point p = vertices[triangles[idF].vertices[(i+2)%3]].p * 0.5
                       + vertices[triangles[idF].vertices[(i+1)%3]].p * 0.5;
-            cout << p._x << " " << p._y << endl;
             return p;
         }
     }
-
+    // ponderation avec les coordonnees barycentriques
     double alpha = (tan[1]  + tan[2]);
     double beta = (tan[0]  + tan[2]) ;
     double gamma = (tan[1]  + tan[0]);
@@ -821,76 +802,19 @@ Point Mesh::centreCercleCirconscrit(int idF){
     Point p = vertices[triangles[idF].vertices[0]].p * alpha
         + vertices[triangles[idF].vertices[1]].p * beta
         + vertices[triangles[idF].vertices[2]].p * gamma;
-
-    cout << p._x << " " << p._y << endl;
     return p;
-
-//    // cas du triangle rectangle
-//    if(tanABC == 42 || tanBCA == 42 || tanCAB == 42){
-//        cout << "Triangle rectangle" << endl;
-//        Point p = c * 0.5 + b * 0.5;
-//        cout << p._x << " " << p._y << endl;
-//        return p;
-//    }
-
-//    float poidsABC = tanBCA + tanCAB;
-//    float poidsBCA = tanABC + tanCAB;
-//    float poidsCAB = tanABC + tanBCA;
-//    float sommePoids = poidsABC + poidsBCA + poidsCAB;
-
-//    poidsABC /= sommePoids;
-//    poidsBCA /= sommePoids;
-//    poidsCAB /= sommePoids;
-
-//    Point p = a * poidsABC + b * poidsBCA + c * poidsCAB;
-//    cout << p._x << " " << p._y << endl;
-//    return p;
-//////////////////
-//    Point p;
-//    double tan[3];
-//    for(int i = 0; i < 3; i++){
-//        Point a = vertices[triangles[idF].vertices[i]].p;
-//        Point b = vertices[triangles[idF].vertices[(i+1)%3]].p;
-//        Point c = vertices[triangles[idF].vertices[(i+2)%3]].p;
-//        Point ac = c - a;
-//        Point ab = b - a;
-//        Point crossABC = ab.cross(ac);
-//        double dotABC = ab.dot(ac);
-
-//        if(dotABC != 0){
-//            tan[i] = crossABC.length2D() / dotABC;
-//            if(dotABC < 0)
-//                tan[i] *= -1;
-//        }
-//        else{
-//            p = b * 0.5 + c * 0.5;
-//            cout << p._x << " " << p._y << endl;
-//            return p;
-//        }
-//    }
-//    double alpha = (tan[1]  + tan[2]);
-//    double beta = (tan[0]  + tan[2]) ;
-//    double gamma = (tan[1]  + tan[0]);
-//    double somme = alpha + beta + gamma;
-//    alpha /= somme;
-//    beta /= somme;
-//    gamma /= somme;
-//    p = vertices[triangles[idF].vertices[0]].p * alpha
-//        + vertices[triangles[idF].vertices[2]].p * beta
-//        + vertices[triangles[idF].vertices[3]].p * gamma;
-
-//    cout << p._x << " " << p._y << endl;
-//    return p;
 }
 
 void Mesh::computeVoronoi(){
     cout << "computing Voronoi" << endl;
     voronoiCenter.clear();
+    // calcul des cellules de voronoi pour tous les triangles non infinis
     for(int i = 0; i < triangles.size(); i++){
         if(isFace2D(i)){
-            cout << endl << "for face : " << i << endl;
             voronoiCenter.push_back(centreCercleCirconscrit(i));
         }
+        else
+            voronoiCenter.push_back(Point(0,0,0));
     }
 }
 
@@ -951,21 +875,21 @@ void Mesh::drawMeshWireFrame() {
 void Mesh::drawVoronoi(){
     glColor3d(0, 1, 0);
     if(!voronoiCenter.empty()){
-        glPointSize(7.F);
-        glBegin(GL_POINTS);
+//        glPointSize(7.F);
+//        glBegin(GL_POINTS);
         for(int i = 0; i < triangles.size(); i++){
             for(int j = 0; j < 3; j++){
                 if(isFace2D(i) && isFace2D(triangles[i].adjacent[j])){
-//                    glBegin(GL_POINT);
-//                    glPointDraw(voronoiCenter[i]);
-//                    glPointDraw(voronoiCenter[triangles[i].adjacent[j]]);
-//                    glEnd();
+                    glBegin(GL_LINE_STRIP);
+                    glPointDraw(voronoiCenter[i]);
+                    glPointDraw(voronoiCenter[triangles[i].adjacent[j]]);
+                    glEnd();
                 }
             }
-            if(isFace2D(i))
-                glPointDraw(voronoiCenter[i]);
+//            if(isFace2D(i))
+//                glPointDraw(voronoiCenter[i]);
         }
-        glEnd();
+//        glEnd();
     }
 }
 

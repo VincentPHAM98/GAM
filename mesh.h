@@ -29,15 +29,16 @@ class Point {
 
     Point cross(Point v);
     float dot(Point v);
-    Point normalize(Point u);
-    float length2D();
+    Point normalize();
+    float length();
     float tangente(Point a, Point b, Point c);
 
-    Point& operator+(const Point p) {
-        _x += p._x;
-        _y += p._y;
-        _z += p._z;
-        return *this;
+    Point operator+(const Point p) {
+        Point res;
+        res._x = _x + p._x;
+        res._y = _y + p._y;
+        res._z = _z + p._z;
+        return res;
     }
 
     // Point& operator - (const Point p){
@@ -47,11 +48,12 @@ class Point {
     //     return *this;
     // }
 
-    Point& operator*(const float f) {
-        _x *= f;
-        _y *= f;
-        _z *= f;
-        return *this;
+    Point operator*(const float f) {
+        Point res;
+        res._x = _x * f;
+        res._y = _y * f;
+        res._z = _z * f;
+        return res;
     }
 };
 
