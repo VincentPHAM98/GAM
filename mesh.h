@@ -32,10 +32,39 @@ class Point {
     Point(double x_, double y_, double z_) : _x(x_), _y(y_), _z(z_) {}
     Point(const QVector3D& v) : _x(v.x()), _y(v.y()), _z(v.z()) {}
 
+    /**
+     * @brief cross / produit vectoriel
+     * @param v
+     * @return résultat du produit vectoriel avec v
+     */
     Point cross(Point v);
+
+    /**
+     * @brief dot / produit scalaire
+     * @param v
+     * @return résultat du produit sclaire avec v
+     */
     double dot(Point v);
+
+    /**
+     * @brief normalize / normalisation du vecteur
+     * @return vecteur normalisé
+     */
     Point normalize();
+
+    /**
+     * @brief length
+     * @return norme du vecteur
+     */
     double length();
+
+    /**
+     * @brief tangente
+     * @param a
+     * @param b
+     * @param c
+     * @return tangente de ABC
+     */
     double tangente(Point a, Point b, Point c);
 
     Point operator+(const Point& p) {
@@ -54,13 +83,6 @@ class Point {
 
     QVector3D operator-(const Point& p);
 
-    // Point& operator - (const Point p){
-    //     _x -= p._x;
-    //     _y -= p._y;
-    //     _z -= p._z;
-    //     return *this;
-    // }
-
     Point operator*(const float f) {
         Point res;
         res._x = _x * f;
@@ -74,17 +96,14 @@ class Point {
 
 class Vertex {
    public:
-    Vertex() : p() {}
-    Vertex(const Point& _p) : p(_p) {}
-    Vertex(const Point& _p, int id) : p(_p), triangleIdx(id) {}
     Point p;
     int triangleIdx = -1;
     bool isDeleted = false;
-    // int pointIndex;
-    // int faceIndex;
 
-    // Vertex(int _pointIndex) : pointIndex(_pointIndex) {}
-    // Vertex(int _pointIndex, int _faceIndex) : pointIndex(_pointIndex), faceIndex(_faceIndex) {}
+    Vertex() : p() {}
+    Vertex(const Point& _p) : p(_p) {}
+    Vertex(const Point& _p, int id) : p(_p), triangleIdx(id) {}
+
     void remove() { isDeleted = true; }
 };
 
@@ -100,10 +119,26 @@ class Triangle {
     Triangle(std::array<uint, 3> _vertices) : vertices(_vertices) {}
     Triangle(std::array<uint, 3> _vertices, std::array<uint, 3> _adjacent) : vertices(_vertices), adjacent(_adjacent) {}
     //    ~Triangle();
-    // Gives internal index of given vertex index
+    /**
+     * @brief getInternalIdx
+     * @param vertexIdx
+     * @param shift
+     * @return Gives internal index of given vertex index
+     */
     int getInternalIdx(size_t vertexIdx, int shift = 0) const;
 
+    /**
+     * @brief getAdjacentFaceFromGlobalVertex
+     * @param vertexIdx
+     * @return Gives adjacent face from global vertex
+     */
     int getAdjacentFaceFromGlobalVertex(int vertexIdx) const;
+
+    /**
+     * @brief getVertexFromAdjacentFace
+     * @param faceIdx
+     * @return Gives vertex from adjacent face
+     */
     uint& getVertexFromAdjacentFace(uint faceIdx);
     void remove() { isDeleted = true; }
 };
@@ -308,72 +343,169 @@ class Mesh {
 
     float area(const Triangle& t);
 
+    /**
+     * @brief loads off file into data structure
+     * @param path
+     */
     void loadOFF(std::string path);
-    void initFile(string filepath);
 
+    /**
+     * @brief findTopology
+     */
     void findTopology();
+
+    /**
+     * @brief compute laplacian for the mesh
+     */
     void calculateLaplacian();
 
+    /**
+     * @brief splitTriangle into 3 sub triangles at location of indVertex
+     * @param indFace
+     * @param indVertex
+     * @param delaunay
+     */
     void splitTriangle(int indFace, int indVertex, bool delaunay);
     uint splitTriangle(uint indFace, const Point& p, bool delaunay);
     uint splitTriangleMiddle(int indFace, bool delaunay);
+
+    /**
+     * @brief edgeFlip edge between indFace1 and inFace2 if possible, computes local delaunay if need
+     * @param indFace1
+     * @param indFace2
+     * @param delaunay
+     */
     void edgeFlip(int indFace1, int indFace2, bool delaunay);
+
+    /**
+     * @brief orientation2D
+     * @param p1
+     * @param p2
+     * @param p3
+     * @return orientation of triangle
+     */
     float orientation2D(Point p1, Point p2, Point p3) const;
     float orientation2D(int i1, int i2, int i3) const;
     float orientation2D(const Triangle& t) const;
+
+    /**
+     * @brief getNormal
+     * @param a
+     * @param b
+     * @param c
+     * @return normal of triangle
+     */
     Point getNormal(Point a, Point b, Point c);
     Point getNormal(Triangle f);
     Point getNormal(int idFace);
+
+    /**
+     * @brief isInside
+     * @param p
+     * @param t
+     * @return bool p inside t
+     */
     bool isInside(const Point& p, const Triangle& t) const;
+
+    /**
+     * @brief inserts p in mesh if possible, computes local delaunay if needed
+     * @param p
+     * @param delaunay
+     */
     void insertPoint2D(const Point& p, bool delaunay);
     void insertRandPoint2D(int max, bool delaunay);
+
+    // checks if elements are 2D (not defined on z axis)
     bool is2D(int indF);
     bool isVert2D(int indV);
     bool isFace2D(int indF);
 
+    /**
+     * @brief findFacesWithCommonEdge of idVert1 and idVert2
+     * @param idVert1
+     * @param idVert2
+     * @return common edge
+     */
     std::pair<int, int> findFacesWithCommonEdge(uint idVert1, uint idVert2);
     std::set<int> adjacentVerticesOfVertex(uint indV);
     void changeIncidentFacesOfFaceVertices(uint idFace, std::pair<int, int> deletedFaces);
     int collapseEdge(uint idVert1, uint idVert2);
     void collapseShortestEdge();
 
+    // DRAW FUNCTIONS
     void drawMesh();
     void drawMeshWireFrame();
     void drawMeshLaplacian(bool wireframe = false);
     void drawVoronoi();
-    void test();
 
-    // vector<Point> points;
-    // vector<Face> faces;
-    // map <arrete>, <face, indice sommet opposé>
-    // map<pair<int, int>, pair<int, int>> topology;
+    void test();
 
     int currentFace = 0;
     bool highlightNeighbors;
     uint selectedVertex1 = 1, selectedVertex2 = 2;
 
-    void handleFace(int indVertex1, int indVertex2, int indVertex3, int faceIndex);
-    void handleEdge(int indVertex1, int indVertex2, int faceIndex, int opposedVertex);
-    void clearData();
-
-    bool isInCirconscrit(int idFace, Point p);
-
     // complete l'enveloppe convexe avec des edge flip
     void completeConvexHull(int idFace, int idVert, bool delaunay);
-
+    // utility functions to find indexes
     int findAdjFace(int idFace, int id2find);
     int vertIndexInFace(int idFace, int idVert);
     int infiniteInFace(int idFace);
+
     // retourne l'id du sommet dans idFace2 opposé à idFace1
     int opposedVert(int idFace1, int idFace2);
 
+    /**
+     * @brief isInCirconscrit
+     * @param idFace
+     * @param p
+     * @return bool p inside face idFace
+     */
+    bool isInCirconscrit(int idFace, Point p);
+
+    /**
+     * @brief checkFaceDelaunayGlobal, chekcs one face and its neighbors if they are delaunay
+     * @param nonDelaunay
+     * @param idFace
+     */
     void checkFaceDelaunayGlobal(queue<pair<int, int>>& nonDelaunay, int idFace);
+
+    /**
+     * @brief checkFaceDelaunayLocal, chekcs one face and its neighbors if they are delaunay and checks them if they are not
+     * @param nonDelaunay
+     * @param idFace
+     */
     void checkFaceDelaunayLocal(queue<pair<int, int>>& nonDelaunay, int idFace);
+
+    /**
+     * @brief makeDelaunay, update to make mesh Delaunay
+     */
     void makeDelaunay();
+
+    /**
+     * @brief localDelaunay, update to make face delaunay locally and its neighbors
+     * @param idF
+     */
     void localDelaunay(int idF);
 
+    /**
+     * @brief tangente
+     * @param a
+     * @param b
+     * @param c
+     * @return tangente of ABC
+     */
     float tangente(Point a, Point b, Point c);
+
+    /**
+     * @brief centreCercleCirconscrit
+     * @param idF
+     * @return coordinates of CCC
+     */
     Point centreCercleCirconscrit(int idF);
+
+    /**
+     * @brief computeVoronoi, computes voronoi cells and stores them
+     */
     void computeVoronoi();
 
     friend class MainWindow;

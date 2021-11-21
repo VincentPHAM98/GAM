@@ -326,52 +326,6 @@ uint Mesh::splitTriangleMiddle(int indFace, bool delaunay) {
     return splitTriangle(indFace, Point(pX / 3., pY / 3., pZ / 3.), delaunay);
 }
 
-// Edge flip Miko
-// void Mesh::edgeFlip(int indFace1, int indFace2, bool delaunay) {
-//     Triangle &t1 = triangles[indFace1];
-//     Triangle &t2 = triangles[indFace2];
-
-//     //
-//     auto faces = std::make_pair(indFace1, indFace2);
-//     changeIncidentFacesOfFaceVertices(indFace1, faces);
-//     changeIncidentFacesOfFaceVertices(indFace2, faces);
-
-//     // Step 1: finding common edge indices
-//     int i;
-//     for (i = 0; true; ++i) {
-//         if (t1.adjacent[i] == indFace2)
-//             break;
-//         if (i > 2) {
-//             // throw std::exception();
-//             std::cout << "Impossible de flip" << std::endl;
-//             return;
-//         }
-//     }
-//     std::pair<int, int> edge = {t1.vertices[(i + 1) % 3], t1.vertices[(i + 2) % 3]};
-//     // Step 2: updating adjacent faces' topology
-//     // Only 2 to modify
-//     int t1AdjIdx = t1.adjacent[t1.getInternalIdx(edge.second)];
-//     int t2AdjIdx = t2.adjacent[t2.getInternalIdx(edge.first)];
-//     Triangle &t1Adj = triangles[t1AdjIdx];
-//     Triangle &t2Adj = triangles[t2AdjIdx];
-//     t1Adj.adjacent[t1Adj.getInternalIdx(edge.first, 2)] = indFace2;
-//     t2Adj.adjacent[t2Adj.getInternalIdx(edge.second, 2)] = indFace1;
-
-//     // Step 3: Modifying faces' edges and topology
-//     t1.adjacent[t1.getInternalIdx(edge.second)] = indFace2;
-//     t1.adjacent[t1.getInternalIdx(edge.second, 1)] = t2AdjIdx;
-//     t2.adjacent[t2.getInternalIdx(edge.first)] = indFace1;
-//     t2.adjacent[t2.getInternalIdx(edge.first, 1)] = t1AdjIdx;
-
-//     t1.vertices[t1.getInternalIdx(edge.first)] = t2.vertices[t2.getInternalIdx(edge.first, 1)];
-//     t2.vertices[t2.getInternalIdx(edge.second)] = t1.vertices[t1.getInternalIdx(edge.second, 1)];
-//     if (delaunay) {
-//         localDelaunay(indFace1);
-//         localDelaunay(indFace2);
-//     }
-// }
-
-// vincent
 void Mesh::edgeFlip(int indFace1, int indFace2, bool delaunay) {
     auto faces = std::make_pair(indFace1, indFace2);
     changeIncidentFacesOfFaceVertices(indFace1, faces);
@@ -484,14 +438,6 @@ void Mesh::insertPoint2D(const Point &p, bool delaunay) {
         completeConvexHull(indF, indV, delaunay);
     }
     currentFace = indF;
-}
-
-void Mesh::clearData() {
-    vertices.clear();
-    triangles.clear();
-    // points.clear();
-    // faces.clear();
-    // topology.clear();
 }
 
 bool Mesh::isVert2D(int indV) {
