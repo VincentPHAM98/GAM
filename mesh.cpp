@@ -96,21 +96,25 @@ void Mesh::test() {
     splitTriangleMiddle(0, 0);
 }
 
-Point Point::cross(Point u, Point v) {
+Point Point::cross(Point v) {
     Point p;
-    p._x = u._y * v._z - u._z * v._y;
-    p._y = u._z * v._x - u._x * v._z;
-    p._z = u._x * v._y - u._y * v._x;
+    p._x = _y * v._z - _z * v._y;
+    p._y = _z * v._x - _x * v._z;
+    p._z = _x * v._y - _y * v._x;
     return p;
 }
 
-float Point::dot(Point u, Point v) {
-    return u._x * v._x + u._y * v._y + u._z * v._z;
+double Point::dot(Point v) {
+    return _x * v._x + _y * v._y + _z * v._z;
 }
 
-Point Point::normalize(Point u) {
-    float d = sqrt(u._x * u._x + u._y * u._y + u._z * u._z);
-    return Point(u._x / d, u._y / d, u._z / d);
+Point Point::normalize() {
+    float d = sqrt(_x * _x + _y * _y + _z * _z);
+    return Point(_x / d, _y / d, _z / d);
+}
+
+double Point::length() {
+    return sqrt(_x * _x + _y * _y + _z * _z);
 }
 
 Mesh::Mesh() {
@@ -257,6 +261,20 @@ void Mesh::calculateLaplacian() {
 // retourne l'id du nouveau sommet
 uint Mesh::splitTriangle(uint indFace, const Point &newVertexPos, bool delaunay) {
     Triangle *t = &triangles[indFace];  // current working face
+
+    // Mettre a jour les indices de triangles des sommets de la face splitée
+    for (int i = 0; i < 3; i++) {
+        auto cof = incident_faces(t->vertices[i]);
+        auto begin = cof;
+        do {
+            if (cof.globalIdx() != indFace)
+                // if (!isVert2D(t->vertices[i]) || isFace2D(cof.globalIdx()))
+                break;
+            ++cof;
+        } while (true);
+        vertices.at(t->vertices[i]).triangleIdx = cof.globalIdx();
+    }
+
     // Adding new vertex to Mesh
     Vertex v(newVertexPos, indFace);
     vertices.push_back(v);
@@ -309,9 +327,15 @@ uint Mesh::splitTriangleMiddle(int indFace, bool delaunay) {
 }
 
 // Edge flip Miko
-// void Mesh::edgeFlip(int indFace1, int indFace2) {
+// void Mesh::edgeFlip(int indFace1, int indFace2, bool delaunay) {
 //     Triangle &t1 = triangles[indFace1];
 //     Triangle &t2 = triangles[indFace2];
+
+//     //
+//     auto faces = std::make_pair(indFace1, indFace2);
+//     changeIncidentFacesOfFaceVertices(indFace1, faces);
+//     changeIncidentFacesOfFaceVertices(indFace2, faces);
+
 //     // Step 1: finding common edge indices
 //     int i;
 //     for (i = 0; true; ++i) {
@@ -341,10 +365,18 @@ uint Mesh::splitTriangleMiddle(int indFace, bool delaunay) {
 
 //     t1.vertices[t1.getInternalIdx(edge.first)] = t2.vertices[t2.getInternalIdx(edge.first, 1)];
 //     t2.vertices[t2.getInternalIdx(edge.second)] = t1.vertices[t1.getInternalIdx(edge.second, 1)];
+//     if (delaunay) {
+//         localDelaunay(indFace1);
+//         localDelaunay(indFace2);
+//     }
 // }
 
 // vincent
 void Mesh::edgeFlip(int indFace1, int indFace2, bool delaunay) {
+    auto faces = std::make_pair(indFace1, indFace2);
+    changeIncidentFacesOfFaceVertices(indFace1, faces);
+    changeIncidentFacesOfFaceVertices(indFace2, faces);
+
     int sommetF1 = -1, sommetF2, indSommetF1, indSommetF2;
     // cherche l'arrête commune et stock des infos pour la suite
     for (int i = 0; i < 3; i++) {
@@ -578,21 +610,18 @@ bool Mesh::isInCirconscrit(int idF, Point p) {
     Point normale = getNormal(_p[0], _p[1], _p[2]);
     Point pa = Point(_p[0] - pTemp);
 
-    return p.dot(normale, pa) < 0;
+    return normale.dot(pa) < 0;
 }
 
 // cherche parmi les voisins de idFace si leurs arrêtes sont Delaunay et les ajoute à la queue
 void Mesh::checkFaceDelaunayGlobal(queue<pair<int, int>> &nonDelaunay, int idFace) {
-    cout << "checking face : " << idFace << endl;
     for (int j = 0; j < 3; j++) {
         int idAdjacent = triangles[idFace].adjacent[j];
         // ne regarde que des nouvelles arrête pas dans une face infinie
         if (idAdjacent > idFace && isFace2D(idFace) && isFace2D(idAdjacent)) {
             Vertex d = vertices[triangles[idAdjacent].vertices[opposedVert(idFace, idAdjacent)]];
-            cout << triangles[idAdjacent].vertices[opposedVert(idFace, idAdjacent)] << endl;
             // si non delaunay localement, on ajoute à la queue
             if (isInCirconscrit(idFace, d.p)) {
-                cout << idAdjacent << endl;
                 nonDelaunay.push({idFace, idAdjacent});
             }
         }
@@ -624,16 +653,13 @@ void Mesh::makeDelaunay() {
 }
 
 void Mesh::checkFaceDelaunayLocal(queue<pair<int, int>> &nonDelaunay, int idFace) {
-    cout << "checking face : " << idFace << endl;
     for (int j = 0; j < 3; j++) {
         int idAdjacent = triangles[idFace].adjacent[j];
         // ne regarde que des nouvelles arrête pas dans une face infinie
         if (isFace2D(idFace) && isFace2D(idAdjacent)) {
             Vertex d = vertices[triangles[idAdjacent].vertices[opposedVert(idFace, idAdjacent)]];
-            cout << triangles[idAdjacent].vertices[opposedVert(idFace, idAdjacent)] << endl;
             // si non delaunay localement, on ajoute à la queue
             if (isInCirconscrit(idFace, d.p)) {
-                cout << idAdjacent << endl;
                 nonDelaunay.push({idFace, idAdjacent});
             }
         }
@@ -647,7 +673,6 @@ void Mesh::localDelaunay(int idF) {
     checkFaceDelaunayLocal(nonDelaunay, idF);
 
     while (!nonDelaunay.empty()) {
-        cout << nonDelaunay.front().first << " " << nonDelaunay.front().second << endl;
         edgeFlip(nonDelaunay.front().first, nonDelaunay.front().second, 0);
         localDelaunay(nonDelaunay.front().first);
         localDelaunay(nonDelaunay.front().second);
@@ -681,10 +706,10 @@ std::set<int> Mesh::adjacentVerticesOfVertex(uint indV) {
 
 // Si les sommets d'un triangle ont pour indice de triangle lui même,
 // change les sommets pour avoir pour indice les triangles voisins.
-void Mesh::changeIncidentFacesOfFaceEdges(uint idFace, std::pair<int, int> deletedFaces) {
-    Triangle &t = triangles[idFace];
+void Mesh::changeIncidentFacesOfFaceVertices(uint idFace, std::pair<int, int> deletedFaces) {
+    Triangle &t = triangles.at(idFace);
     for (int i = 0; i < 3; i++) {
-        Vertex &v = vertices[t.vertices[i]];
+        Vertex &v = vertices.at(t.vertices[i]);
         // si le sommet pointe vers les triangles allant disparaitre
         auto cof = incident_faces(t.vertices[i]);
         while (v.triangleIdx == deletedFaces.first || v.triangleIdx == deletedFaces.second) {
@@ -720,8 +745,8 @@ int Mesh::collapseEdge(uint idVert1, uint idVert2) {
     auto faces = findFacesWithCommonEdge(idVert1, idVert2);
 
     // changer la face incidente des sommets des faces allant etre supprimees
-    changeIncidentFacesOfFaceEdges(faces.first, faces);
-    changeIncidentFacesOfFaceEdges(faces.second, faces);
+    changeIncidentFacesOfFaceVertices(faces.first, faces);
+    changeIncidentFacesOfFaceVertices(faces.second, faces);
     // Lister les faces qui vont perdre leur sommet
     // pour arranger leur sommet plus tard
     auto cof = incident_faces(idVert2);
@@ -767,21 +792,81 @@ void Mesh::collapseShortestEdge() {
         queue;
 
     for (auto it = vertices_begin(); it != vertices_past_the_end(); ++it) {
-        auto cov = adjacent_vertices(it.getIdx());
-        auto begin = cov;
-        do {
-            Edge edge = std::make_pair((int)it.getIdx(), cov.globalVertexIdx());
-            auto edgeVector = cov->p - it->p;
-            double length = edgeVector.length();
-            queue.push(std::make_pair(length, edge));
-            ++cov;
-        } while (cov != begin);
+        if (it->p._z == 0.) {  // si arête infinie, ne pas participer
+            auto cov = adjacent_vertices(it.getIdx());
+            auto begin = cov;
+            do {
+                if (cov->p._z == 0.) {
+                    Edge edge = std::make_pair((int)it.getIdx(), cov.globalVertexIdx());
+                    auto edgeVector = cov->p - it->p;
+                    double length = edgeVector.lengthSquared();
+                    queue.push(std::make_pair(length, edge));
+                }
+                ++cov;
+            } while (cov != begin);
+        }
     }
     int success;
     do {
         success = collapseEdge(queue.top().second.first, queue.top().second.second);
         queue.pop();
     } while (success && queue.size());
+}
+double Point::tangente(Point a, Point b, Point c) {
+    Point ba = a - b;
+    Point bc = c - b;
+    Point crossABC = bc.cross(ba);
+    double dotABC = bc.dot(ba);
+
+    // pour éviter d'avoir des nan avec un triangle rectangle
+    if (dotABC != 0) {
+        if (crossABC._z < 0)
+            return -crossABC.length() / bc.dot(ba);
+        return crossABC.length() / bc.dot(ba);
+    }
+    return 42;
+}
+
+Point Mesh::centreCercleCirconscrit(int idF) {
+    // Methode des tangentes vu en cours
+    Point _p[3];
+    double tan[3];
+    for (int i = 0; i < 3; i++) {
+        _p[i] = vertices[triangles[idF].vertices[i]].p;
+    }
+    for (int i = 0; i < 3; i++) {
+        tan[i] = _p[i].tangente(vertices[triangles[idF].vertices[(i + 2) % 3]].p,
+                                vertices[triangles[idF].vertices[(i) % 3]].p,
+                                vertices[triangles[idF].vertices[(i + 1) % 3]].p);
+        // si triangle rectangle, centre du cercle au milieu de l'hypotenuse
+        if (tan[i] == 42) {
+            Point p = vertices[triangles[idF].vertices[(i + 2) % 3]].p * 0.5 + vertices[triangles[idF].vertices[(i + 1) % 3]].p * 0.5;
+            return p;
+        }
+    }
+    // ponderation avec les coordonnees barycentriques
+    double alpha = (tan[1] + tan[2]);
+    double beta = (tan[0] + tan[2]);
+    double gamma = (tan[1] + tan[0]);
+    double somme = alpha + beta + gamma;
+    alpha /= somme;
+    beta /= somme;
+    gamma /= somme;
+    Point p = vertices[triangles[idF].vertices[0]].p * alpha + vertices[triangles[idF].vertices[1]].p * beta + vertices[triangles[idF].vertices[2]].p * gamma;
+    return p;
+}
+
+void Mesh::computeVoronoi() {
+    cout << "computing Voronoi" << endl;
+    voronoiCenter.clear();
+
+    for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
+        if (isFace2D(it.getIdx())) {
+            voronoiCenter.insert({it.getIdx(), centreCercleCirconscrit(it.getIdx())});
+        }
+        // else
+        //     voronoiCenter.push_back(Point(0, 0, 0));
+    }
 }
 
 void Mesh::drawMesh() {
@@ -872,6 +957,27 @@ void Mesh::drawMeshLaplacian(bool wireframe) {
     }
 }
 
+void Mesh::drawVoronoi() {
+    glColor3d(0, 1, 0);
+    if (!voronoiCenter.empty()) {
+        glBegin(GL_LINES);
+        for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
+            int i = it.getIdx();
+            for (int j = 0; j < 3; j++) {
+                if (isFace2D(i) && isFace2D(triangles[i].adjacent[j])) {
+                    auto pointIt = voronoiCenter.find(i);
+                    auto adjacentIt = voronoiCenter.find(triangles[i].adjacent[j]);
+                    if (pointIt != voronoiCenter.end() && adjacentIt != voronoiCenter.end()) {
+                        glPointDraw(pointIt->second);
+                        glPointDraw(adjacentIt->second);
+                    }
+                }
+            }
+        }
+        glEnd();
+    }
+}
+
 GeometricWorld::GeometricWorld() {
     double width = 0.5, depth = 0.6, height = 0.8;
     _bBox.push_back(Point(-0.5 * width, -0.5 * depth, -0.5 * height));  //0
@@ -890,6 +996,10 @@ void GeometricWorld::draw() {
 //Example with a wireframe bBox
 void GeometricWorld::drawWireFrame() {
     _mesh.drawMeshWireFrame();
+}
+
+void GeometricWorld::drawVoronoi() {
+    _mesh.drawVoronoi();
 }
 
 QVector3D Point::operator-(const Point &p) {

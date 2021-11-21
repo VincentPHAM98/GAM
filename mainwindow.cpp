@@ -12,7 +12,7 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::on_pushButton_3_released() {
-    ui->widget->toggleWireFrame = ui->widget->toggleWireFrame ^= true;
+    ui->widget->toggleWireFrame = !ui->widget->toggleWireFrame;
 }
 
 void MainWindow::on_pushButton_2_released() {
@@ -34,6 +34,10 @@ void MainWindow::on_selectFaceButton_released() {
         ui->widget->_geomWorld._mesh.currentFace = buttonValue;
 }
 
+void MainWindow::on_faceSelectBox_valueChanged(int arg1) {
+    on_selectFaceButton_released();
+}
+
 void MainWindow::on_highlightNeighborsBox_stateChanged(int arg1) {
     ui->widget->_geomWorld._mesh.highlightNeighbors = !ui->widget->_geomWorld._mesh.highlightNeighbors;
 }
@@ -45,8 +49,7 @@ void MainWindow::on_edgeFlipButton_released() {
 }
 
 void MainWindow::on_addPointButton_released() {
-    ui->widget->_geomWorld._mesh.insertPoint2D(Point(ui->xBox->text().toFloat(), ui->yBox->text().toFloat(), 0)
-                                               , ui->incrementalDelaunayBox->isChecked());
+    ui->widget->_geomWorld._mesh.insertPoint2D(Point(ui->xBox->text().toFloat(), ui->yBox->text().toFloat(), 0), ui->incrementalDelaunayBox->isChecked());
 }
 
 void MainWindow::on_DelaunayButton_released() {
@@ -63,17 +66,25 @@ void MainWindow::on_collapseVertice1_valueChanged(int arg1) {
     if (arg1 == ui->collapseVertice2->value()) {
         ui->collapseVertice2->setValue(arg1 + 1);
     }
-    ui->widget->_geomWorld._mesh.selectedVertex1 = arg1;
+    if (arg1 < ui->widget->_geomWorld._mesh.vertices.size())
+        ui->widget->_geomWorld._mesh.selectedVertex1 = arg1;
 }
 
 void MainWindow::on_collapseVertice2_valueChanged(int arg1) {
     if (arg1 == ui->collapseVertice1->value()) {
         ui->collapseVertice2->setValue(arg1 - 1);
     }
-    ui->widget->_geomWorld._mesh.selectedVertex2 = arg1;
+    if (arg1 < ui->widget->_geomWorld._mesh.vertices.size())
+        ui->widget->_geomWorld._mesh.selectedVertex2 = arg1;
 }
 
-void MainWindow::on_edgeCollapseButton_released()
-{
+void MainWindow::on_edgeCollapseButton_released() {
     ui->widget->_geomWorld._mesh.collapseShortestEdge();
+}
+void MainWindow::on_voronoiButton_released() {
+    ui->widget->_geomWorld._mesh.computeVoronoi();
+}
+
+void MainWindow::on_voronoiBox_stateChanged(int arg1) {
+    ui->widget->displayVoronoi = !ui->widget->displayVoronoi;
 }

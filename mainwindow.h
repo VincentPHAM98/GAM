@@ -43,6 +43,12 @@ class MainWindow : public QMainWindow {
 
     void on_edgeCollapseButton_released();
 
+    void on_voronoiButton_released();
+
+    void on_voronoiBox_stateChanged(int arg1);
+
+    void on_faceSelectBox_valueChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
 };

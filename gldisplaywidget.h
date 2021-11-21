@@ -19,6 +19,7 @@ public:
     void resizeGL(int width, int height);
 
     bool toggleWireFrame;
+    bool displayVoronoi;
 
     GeometricWorld _geomWorld; // The scene to be displayed
 
@@ -32,7 +33,7 @@ private:
 
     QTimer _timer; // To update the scene
     float _X = 0.F, _Y = 0.F,_Z = 0.F; // Translation
-    float _angle; // Rotation
+    float _angle = 0.F; // Rotation
 
     QPoint _lastPosMouse; // To keep the last position of the mouse
 

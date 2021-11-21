@@ -29,19 +29,14 @@ class Point {
         _z = p._z;
         return *this;
     }
-    Point(float x_, float y_, float z_) : _x(x_), _y(y_), _z(z_) {}
+    Point(double x_, double y_, double z_) : _x(x_), _y(y_), _z(z_) {}
     Point(const QVector3D& v) : _x(v.x()), _y(v.y()), _z(v.z()) {}
 
-    Point cross(Point u, Point v);
-    float dot(Point u, Point v);
-    Point normalize(Point u);
-
-    Point& operator+=(const Point& p) {
-        _x += p._x;
-        _y += p._y;
-        _z += p._z;
-        return *this;
-    }
+    Point cross(Point v);
+    double dot(Point v);
+    Point normalize();
+    double length();
+    double tangente(Point a, Point b, Point c);
 
     Point operator+(const Point& p) {
         double x = _x + p._x;
@@ -58,12 +53,22 @@ class Point {
     }
 
     QVector3D operator-(const Point& p);
+
     // Point& operator - (const Point p){
     //     _x -= p._x;
     //     _y -= p._y;
     //     _z -= p._z;
     //     return *this;
     // }
+
+    Point operator*(const float f) {
+        Point res;
+        res._x = _x * f;
+        res._y = _y * f;
+        res._z = _z * f;
+        return res;
+    }
+
     friend std::ostream& operator<<(std::ostream& os, const Point& p);
 };
 
@@ -109,7 +114,7 @@ class Mesh {
     std::vector<QVector3D> laplacians;
     std::vector<double> curvature;
 
-    std::vector<pair<int, int>> faceToCheckDelaunay;
+    std::map<uint, Point> voronoiCenter;
 
    public:
     Mesh();
@@ -120,9 +125,9 @@ class Mesh {
         using value_type = Vertex;
         using pointer = Vertex*;
         using reference = Vertex&;
-        Iterator_on_vertices(Mesh &m) : m_mesh(m), m_ptr(nullptr), currentIdx(-1) {}
+        Iterator_on_vertices(Mesh& m) : m_mesh(m), m_ptr(nullptr), currentIdx(-1) {}
         Iterator_on_vertices(const Iterator_on_vertices& copy) : m_mesh(copy.m_mesh), m_ptr(copy.m_ptr), currentIdx(copy.currentIdx) {}
-        Iterator_on_vertices(Mesh &m, pointer ptr) : m_mesh(m), m_ptr(ptr) {}
+        Iterator_on_vertices(Mesh& m, pointer ptr) : m_mesh(m), m_ptr(ptr) {}
 
         reference operator*() const { return *m_ptr; }
         pointer operator->() { return m_ptr; }
@@ -149,7 +154,7 @@ class Mesh {
         friend bool operator!=(const Iterator_on_vertices& a, const Iterator_on_vertices& b) { return a.m_ptr != b.m_ptr; }
 
        private:
-        Mesh &m_mesh;
+        Mesh& m_mesh;
         pointer m_ptr;
         std::size_t currentIdx = 0;
     };
@@ -160,9 +165,9 @@ class Mesh {
         using value_type = Triangle;
         using pointer = Triangle*;
         using reference = Triangle&;
-        Iterator_on_faces(Mesh &m) : m_mesh(m), m_ptr(nullptr), currentIdx(-1) {}
+        Iterator_on_faces(Mesh& m) : m_mesh(m), m_ptr(nullptr), currentIdx(-1) {}
         Iterator_on_faces(const Iterator_on_faces& copy) : m_mesh(copy.m_mesh), m_ptr(copy.m_ptr), currentIdx(copy.currentIdx) {}
-        Iterator_on_faces(Mesh &m, pointer ptr) : m_mesh(m), m_ptr(ptr) {}
+        Iterator_on_faces(Mesh& m, pointer ptr) : m_mesh(m), m_ptr(ptr) {}
 
         reference operator*() const { return *m_ptr; }
         pointer operator->() { return m_ptr; }
@@ -190,26 +195,20 @@ class Mesh {
         friend bool operator!=(const Iterator_on_faces& a, const Iterator_on_faces& b) { return a.m_ptr != b.m_ptr; }
 
        private:
-        Mesh &m_mesh;
+        Mesh& m_mesh;
         pointer m_ptr;
         std::size_t currentIdx = 0;
     };
 
     struct Circulator_on_faces {
-        //        using iterator_category = std::forward_iterator_tag;
-        //        using difference_type   = std::ptrdiff_t;
         using value_type = Triangle;
         using pointer = Triangle*;
         using reference = Triangle&;
         Circulator_on_faces() = delete;
         Circulator_on_faces(const Circulator_on_faces& c)
             : m_mesh(c.m_mesh), m_ptr(c.m_ptr), m_center_idx(c.m_center_idx), m_index(c.m_index) {}
-        //        Circulator_on_faces(Mesh &mesh, pointer ptr, const Vertex *center): m_mesh(mesh), m_ptr(ptr), m_center(center){}
         Circulator_on_faces(Mesh& mesh, pointer ptr, std::size_t center_idx, int index)
             : m_mesh(mesh), m_ptr(ptr), m_center_idx(center_idx), m_index(index) {}
-        //        Circulator_on_faces(Mesh &mesh, pointer ptr, Iterator_on_vertices vIt): m_mesh(mesh), m_ptr(ptr){
-        //            m_center_idx = vIt.getIdx();
-        //        }
 
         reference operator*() const { return *m_ptr; }
         pointer operator->() { return m_ptr; }
@@ -237,17 +236,15 @@ class Mesh {
     };
 
     struct Circulator_on_vertices {
-        //        using iterator_category = std::forward_iterator_tag;
-        //        using difference_type   = std::ptrdiff_t;
         using value_type = Vertex;
         using pointer = Vertex*;
         using reference = Vertex&;
         Circulator_on_vertices(Mesh& mesh, pointer ptr, std::size_t center_idx, Circulator_on_faces cof, uint vertexIdx)
             : m_mesh(mesh),
-                                                                                                                           m_ptr(ptr),
-                                                                                                                           m_center_idx(center_idx),
-                                                                                                                           m_cof(cof),
-                                                                                                                           m_vertexIdx(vertexIdx) {
+              m_ptr(ptr),
+              m_center_idx(center_idx),
+              m_cof(cof),
+              m_vertexIdx(vertexIdx) {
         }
 
         reference operator*() const { return *m_ptr; }
@@ -304,8 +301,8 @@ class Mesh {
     Circulator_on_vertices adjacent_vertices(std::size_t vIdx) {
         auto cof = incident_faces(vIdx);
         int next = cof->getInternalIdx(vIdx, 1);
-        uint globalVertexIdx = cof->vertices[next];
-        Vertex* adjVert = &vertices[globalVertexIdx];
+        uint globalVertexIdx = cof->vertices.at(next);
+        Vertex* adjVert = &vertices.at(globalVertexIdx);
         return Circulator_on_vertices(*this, adjVert, vIdx, cof, globalVertexIdx);
     }
 
@@ -336,13 +333,14 @@ class Mesh {
 
     std::pair<int, int> findFacesWithCommonEdge(uint idVert1, uint idVert2);
     std::set<int> adjacentVerticesOfVertex(uint indV);
-    void changeIncidentFacesOfFaceEdges(uint idFace, std::pair<int, int> deletedFaces);
+    void changeIncidentFacesOfFaceVertices(uint idFace, std::pair<int, int> deletedFaces);
     int collapseEdge(uint idVert1, uint idVert2);
     void collapseShortestEdge();
 
     void drawMesh();
     void drawMeshWireFrame();
     void drawMeshLaplacian(bool wireframe = false);
+    void drawVoronoi();
     void test();
 
     // vector<Point> points;
@@ -374,6 +372,10 @@ class Mesh {
     void makeDelaunay();
     void localDelaunay(int idF);
 
+    float tangente(Point a, Point b, Point c);
+    Point centreCercleCirconscrit(int idF);
+    void computeVoronoi();
+
     friend class MainWindow;
 };
 
@@ -384,6 +386,7 @@ class GeometricWorld  //Generally used to create a singleton instance
     GeometricWorld();
     void draw();
     void drawWireFrame();
+    void drawVoronoi();
     // ** TP Can be extended with further elements;
     Mesh _mesh;
 };
