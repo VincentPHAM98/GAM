@@ -49,6 +49,10 @@ class MainWindow : public QMainWindow {
 
     void on_faceSelectBox_valueChanged(int arg1);
 
+    void on_laplacienBox_stateChanged(int arg1);
+
+    void on_computeLaplacianButton_released();
+
 private:
     Ui::MainWindow *ui;
 };

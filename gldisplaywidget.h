@@ -18,8 +18,9 @@ public:
     void paintGL(); // Display the scene Gl
     void resizeGL(int width, int height);
 
-    bool toggleWireFrame;
-    bool displayVoronoi;
+    bool toggleWireFrame = false;
+    bool displayVoronoi = false;
+    bool displayLaplacien = false;
 
     GeometricWorld _geomWorld; // The scene to be displayed
 

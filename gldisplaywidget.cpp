@@ -49,6 +49,8 @@ void GLDisplayWidget::paintGL() {
 
     if(toggleWireFrame)
         _geomWorld.drawWireFrame();
+    else if (displayLaplacien)
+        _geomWorld.drawLaplacien();
     else
         _geomWorld.draw();
     if(displayVoronoi)

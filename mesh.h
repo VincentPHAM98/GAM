@@ -435,10 +435,8 @@ class Mesh {
     // DRAW FUNCTIONS
     void drawMesh();
     void drawMeshWireFrame();
-    void drawMeshLaplacian(bool wireframe = false);
+    void drawMeshLaplacian();
     void drawVoronoi();
-
-    void test();
 
     int currentFace = 0;
     bool highlightNeighbors;
@@ -519,6 +517,7 @@ class GeometricWorld  //Generally used to create a singleton instance
     void draw();
     void drawWireFrame();
     void drawVoronoi();
+    void drawLaplacien();
     // ** TP Can be extended with further elements;
     Mesh _mesh;
 };

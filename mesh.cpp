@@ -60,42 +60,6 @@ float Mesh::area(const Triangle &t) {
     return 0.5 * QVector3D::crossProduct(ab, ac).length();
 }
 
-void Mesh::test() {
-    calculateLaplacian();
-
-    // test circulateur face infinie
-    auto circ = adjacent_vertices(8);
-    auto begin = adjacent_vertices(8);
-    ++circ;
-    for (; circ != begin; ++circ) {
-        std::cout << circ.globalVertexIdx() << std::endl;
-    }
-
-    // test orientation
-    for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
-        std::cout << "idx: " << it.getIdx() << std::endl;
-        std::cout << "orientation: " << orientation2D(*it) << std::endl;
-    }
-
-    // test isInside
-    for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
-        double pX = 0., pY = 0., pZ = 0.;
-        for (int i = 0; i < 3; ++i) {
-            pX += vertices[it->vertices[i]].p._x;
-            pY += vertices[it->vertices[i]].p._y;
-            pZ += vertices[it->vertices[i]].p._z;
-        }
-        std::cout << "is inside: " << isInside(Point(pX / 3., pY / 3., pZ / 3.), *it) << std::endl;
-    }
-
-    // test split
-    int size = triangles.size();
-    for (int i = 0; i < size; ++i) {
-        splitTriangleMiddle(i, 0);
-    }
-    splitTriangleMiddle(0, 0);
-}
-
 Point Point::cross(Point v) {
     Point p;
     p._x = _y * v._z - _z * v._y;
@@ -738,19 +702,15 @@ void Mesh::collapseShortestEdge() {
         queue;
 
     for (auto it = vertices_begin(); it != vertices_past_the_end(); ++it) {
-        if (it->p._z == 0.) {  // si arête infinie, ne pas participer
-            auto cov = adjacent_vertices(it.getIdx());
-            auto begin = cov;
-            do {
-                if (cov->p._z == 0.) {
-                    Edge edge = std::make_pair((int)it.getIdx(), cov.globalVertexIdx());
-                    auto edgeVector = cov->p - it->p;
-                    double length = edgeVector.lengthSquared();
-                    queue.push(std::make_pair(length, edge));
-                }
-                ++cov;
-            } while (cov != begin);
-        }
+        auto cov = adjacent_vertices(it.getIdx());
+        auto begin = cov;
+        do {
+            Edge edge = std::make_pair((int)it.getIdx(), cov.globalVertexIdx());
+            auto edgeVector = cov->p - it->p;
+            double length = edgeVector.lengthSquared();
+            queue.push(std::make_pair(length, edge));
+            ++cov;
+        } while (cov != begin);
     }
     int success;
     do {
@@ -758,6 +718,7 @@ void Mesh::collapseShortestEdge() {
         queue.pop();
     } while (success && queue.size());
 }
+
 double Point::tangente(Point a, Point b, Point c) {
     Point ba = a - b;
     Point bc = c - b;
@@ -880,14 +841,11 @@ void Mesh::drawMeshWireFrame() {
     }
 }
 
-void Mesh::drawMeshLaplacian(bool wireframe) {
+void Mesh::drawMeshLaplacian() {
     // for (const auto &face : triangles) {
     for (auto it = faces_begin(); it != faces_past_the_end(); ++it) {
-        if (wireframe) {
-            glBegin(GL_LINE_STRIP);
-        } else {
-            glBegin(GL_TRIANGLES);
-        }
+        // glBegin(GL_LINE_STRIP);
+        glBegin(GL_TRIANGLES);
         double v = curvature[it->vertices[0]];
         QColor c(0, 0, 0);
         c.setHsv((std::log(1 + 100 * v)), 255, 255);
@@ -946,6 +904,10 @@ void GeometricWorld::drawWireFrame() {
 
 void GeometricWorld::drawVoronoi() {
     _mesh.drawVoronoi();
+}
+
+void GeometricWorld::drawLaplacien() {
+    _mesh.drawMeshLaplacian();
 }
 
 QVector3D Point::operator-(const Point &p) {

@@ -88,3 +88,11 @@ void MainWindow::on_voronoiButton_released() {
 void MainWindow::on_voronoiBox_stateChanged(int arg1) {
     ui->widget->displayVoronoi = !ui->widget->displayVoronoi;
 }
+
+void MainWindow::on_laplacienBox_stateChanged(int arg1) {
+    ui->widget->displayLaplacien = !ui->widget->displayLaplacien;
+}
+
+void MainWindow::on_computeLaplacianButton_released() {
+    ui->widget->_geomWorld._mesh.calculateLaplacian();
+}
